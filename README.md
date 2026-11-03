@@ -1,37 +1,42 @@
 # wines
 
-## Vivino HTTP adapter (experimental)
+## Architecture
 
-A minimal, dependency-free **TypeScript** HTTP wrapper for Stage D of [restaurant wine-list assistant #1](https://github.com/choonkiatlee/wines/issues/1). No Cloudflare-specific code, storage, MCP server or production deployment.
+The wine-list assistant distinguishes **resolution** (finding the right wine and vintage) from **enrichment** (retrieving information for an already resolved ID). This is the Stage C/D/E boundary in [issue #1](https://github.com/choonkiatlee/wines/issues/1).
 
-**Access/permissions:** Vivino has no public developer API. Its May 2026 Terms prohibit automated access/scraping without authorisation. This code documents an unofficial response contract and provides **offline mocked tests only**; do not enable live requests without permission from Vivino. No browser impersonation, session-cookie extraction, challenge bypass, or retrying blocked requests is included.
+| Layer | API | Access configuration |
+|---|---|---|
+| `VivinoResolver` (`src/resolver.ts`) | `searchWines(query)`, `getWine(wineId)`, `resolveVintage(wineId, year)` | Algolia app ID / search key |
+| `VivinoClient` (`src/client.ts`) | `getVintage(vintageId)`, `getTastes(wineId)`, `getProfile(vintageId)` | No Algolia credentials |
 
-## API
+`searchWines` returns **candidates, not verified matches**. The calling workflow must confirm producer and cuvée before resolving a vintage. `resolveVintage` rejects missing years rather than falling back to the all-vintage aggregate. `getProfile` keeps vintage and all-vintage ratings separate, and correctly labels tastes as wine-level.
 
-- `searchWines(query, limit)` — Algolia candidates (not validated entity matches)
-- `getWine(wineId)` — raw indexed wine record and listed vintages
-- `getVintage(vintageId)` — raw vintage JSON
-- `getTastes(wineId)` — wine-level taste structure/flavor groups
-- `getProfile(vintageId)` — normalised wine/vintage/taste record
-- `getProfileForYear(wineId, year)` — exact-year resolution; errors rather than substituting another vintage
-
-Search and `getWine` require explicitly provided Algolia application ID and search key (only if authorised). The other methods target the website's internal JSON endpoints. All methods use injected standard `fetch` to support offline tests and eventual Workers use.
+### Example
 
 ```ts
-import { VivinoClient } from './src/index.ts';
+import { VivinoClient, VivinoResolver } from './src/index.ts';
 
-const client = new VivinoClient({
-  fetch: yourAuthorisedFetch,
+const resolver = new VivinoResolver({
+  fetch: authorisedFetch,
   algolia: { appId: yourAppId, searchKey: yourSearchKey },
 });
+const info = new VivinoClient({ fetch: authorisedFetch }); // no Algolia configuration
 
-const candidates = await client.searchWines('example producer');
-const profile = await client.getProfileForYear(12345, 2020);
+const { hits } = await resolver.searchWines('example producer');
+// Verify the matching wine manually or with a future Stage C matching component.
+const selectedWineId = hits[0].id;
+const resolved = await resolver.resolveVintage(selectedWineId, 2020);
+const profile = await info.getProfile(resolved.vintageId);
 // profile.ratings.vintage and profile.ratings.allVintages are distinct
-// profile.taste.scope is 'wine', not 'vintage'
 ```
 
-No live requests are made by the test suite:
+The resolver is replaceable without modifying `VivinoClient`; another resolver can supply the same `vintageId`. Both layers use an injectable standard `fetch`, suitable for Node or Cloudflare Workers, and no database or MCP transport is required.
+
+### Permissions
+
+Vivino does not offer a public developer API. Its terms restrict automated access/scraping without authorisation. These are **reverse-engineered, unofficial endpoints**, not a guarantee of anonymous access. Removing the Algolia credentials from the information client does **not** establish that its endpoints are public, reliably accessible or licensed for use. No live requests are made by the tests, and neither layer implements browser impersonation, cookie extraction, challenge bypass or blocked-request retries.
+
+### Offline validation
 
 ```sh
 npm install
@@ -39,8 +44,8 @@ npm run typecheck
 npm test
 ```
 
-Works with Node 22.16+ for built-in TypeScript stripping in tests. TypeScript/Workers bundlers can import `src/index.ts` directly. Request/response shapes are reverse-engineered from the [marco-vrinssen/vivino-mcp implementation](https://github.com/marco-vrinssen/vivino-mcp/blob/main/src/vivino.js) and may change.
+Node 22.16+ and TypeScript are required for the included tests. Underlying field shapes follow [marco-vrinssen/vivino-mcp](https://github.com/marco-vrinssen/vivino-mcp/blob/main/src/vivino.js) and may change without warning.
 
-## Explicitly not implemented yet
+### Later work
 
-Review pagination, prices, autocomplete, configurable caching, rate limits, live integration tests, provider licensing, Cloudflare Worker routes, R2/D1 persistence and menu-based entity resolution. These should be decided separately for Stages C/D/E/H.
+Stage C producer/cuvée matching and confidence thresholds, more provider implementations, reviews, prices, caching, live integration (subject to permission), Cloudflare deployment, R2 and D1 are intentionally deferred.
