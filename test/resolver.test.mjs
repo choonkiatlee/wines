@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { VivinoResolver } from '../src/index.ts';
+import { AlgoliaResolver } from '../src/index.ts';
 
 function mockFetch(calls) {
   return async (url, init = {}) => {
@@ -14,7 +14,7 @@ function mockFetch(calls) {
 }
 
 function resolver(calls) {
-  return new VivinoResolver({
+  return new AlgoliaResolver({
     fetch: mockFetch(calls),
     algolia: { appId: 'example-app', searchKey: 'example-search-key' },
   });
@@ -42,5 +42,5 @@ test('does not substitute a different vintage or U.V.', async () => {
 });
 
 test('resolver requires explicit Algolia credentials', () => {
-  assert.throws(() => new VivinoResolver({ algolia: { appId: '', searchKey: '' } }), /Algolia configuration/);
+  assert.throws(() => new AlgoliaResolver({ algolia: { appId: '', searchKey: '' } }), /Algolia configuration/);
 });
