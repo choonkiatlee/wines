@@ -2,13 +2,13 @@
 
 ## Architecture
 
-Wine discovery/identity resolution (Stage C) is separate from information retrieval (Stage D/E). See [issue #1](https://github.com/choonkiatlee/wines/issues/1).
+Wine discovery and vintage resolution (Stage C) are separate from information retrieval (Stages D/E). See [issue #1](https://github.com/choonkiatlee/wines/issues/1).
 
 | Component | Responsibility | Credentials |
 |---|---|---|
-| `IWineResolver<TCandidate, TWineId, TResolved>` (`src/wine-resolver.ts`) | Provider-independent strategy for searching candidates and resolving a vintage | None specified by interface |
-| `AlgoliaResolver` (`src/algolia-resolver.ts`) | Concrete search and exact-year resolution using the Vivino Algolia index | Algolia app ID / search key |
-| `VivinoClient` (`src/client.ts`) | Fetch a known `vintageId`, wine tastes and rating profiles; optional injected resolver for `getProfileForYear` | No Algolia credentials in client |
+| `IWineResolver<TCandidate, TWineId, TResolved>` (`src/wine-resolver.ts`) | Provider-independent candidate search and vintage-resolution contract | None specified by interface |
+| `AlgoliaResolver` (`src/algolia-resolver.ts`) | Search the Vivino Algolia index, retrieve candidates, resolve an exact vintage | Algolia app ID / search key |
+| `VivinoClient` (`src/client.ts`) | Fetch a known Vivino `vintageId`, wine-level tastes and ratings | No Algolia credentials or resolver |
 
 ### Example
 
@@ -19,23 +19,24 @@ const resolver = new AlgoliaResolver({
   fetch: authorisedFetch,
   algolia: { appId: yourAppId, searchKey: yourSearchKey },
 });
+const client = new VivinoClient({ fetch: authorisedFetch }); // no resolver
 
-const client = new VivinoClient({ fetch: authorisedFetch, resolver });
 const { candidates } = await resolver.searchWines('example producer');
-// Confirm the producer and cuvée before selecting a candidate.
-const profile = await client.getProfileForYear(candidates[0].id, 2020);
-// Alternatively, a previously resolved vintage needs no resolver or search key:
-const infoOnly = new VivinoClient({ fetch: authorisedFetch });
-const knownProfile = await infoOnly.getProfile(12345);
+// Confirm the correct producer and cuvée before choosing a candidate.
+const chosenWineId = candidates[0].id;
+const { vintageId } = await resolver.resolveVintage(chosenWineId, 2020);
+const profile = await client.getProfile(vintageId);
 ```
 
-**Swappability:** `VivinoClient` depends only on `IWineResolver<Wine, number, ResolvedVivinoVintage>`, not `AlgoliaResolver`. A different discovery strategy can be injected, including a curated map or another index, provided it resolves to Vivino wine/vintage IDs. The generic interface itself has no Vivino imports, so other providers may use other candidate and identifier types in their own clients.
+The generic interface has **no Vivino imports**. Each implementation chooses its own candidate, wine-ID, and resolved-identity types. `AlgoliaResolver` implements `IWineResolver<Wine, number, ResolvedVivinoVintage>` and additionally exposes `getWine` for its own indexed wine lookup.
 
-Candidate search does not verify a producer/cuvée. The resolver rejects a requested year that is not listed instead of falling back to another year or `U.V.`. The client checks that the resolved identity agrees with the retrieved vintage record and preserves vintage-specific versus all-vintage ratings. Taste data are labelled wine-level.
+`VivinoClient` is intentionally **not injected with a resolver**. It is a standalone Vivino information client that accepts a resolved Vivino vintage ID. The calling workflow decides how to obtain and verify that ID. Another resolver could replace Algolia if it supplies compatible Vivino IDs; a different information provider could have a different client.
+
+Search returns candidates, not verified matches. The Algolia resolver does not substitute a different year or `U.V.` when the requested vintage is unavailable. The Vivino information client preserves exact-vintage versus all-vintage ratings and labels taste data as wine-level.
 
 ### Permissions
 
-Vivino has no public developer API; its terms prohibit unauthorised automated access. These endpoints are reverse-engineered and cannot be assumed to be licensed or reliably accessible. The tests make no live Vivino calls. No browser impersonation, session-cookie extraction, bot-protection bypass or blocked-request retries are included.
+Vivino has no public developer API. Its terms restrict unauthorised automated access. These endpoints are reverse-engineered and should not be assumed licensed or reliably accessible. Tests make no live Vivino calls. No browser impersonation, session-cookie extraction, bot-protection bypass, or blocked-request retries are included.
 
 ### Offline validation
 
@@ -45,4 +46,4 @@ npm run typecheck
 npm test
 ```
 
-Node 22.16+ is required for the test runner. Schema references: [marco-vrinssen/vivino-mcp](https://github.com/marco-vrinssen/vivino-mcp/blob/main/src/vivino.js). Cloudflare routes, R2/D1, review pagination, prices and producer/cuvée matching are deferred.
+Node 22.16+ is required for the test runner. Schema references: [marco-vrinssen/vivino-mcp](https://github.com/marco-vrinssen/vivino-mcp/blob/main/src/vivino.js). Cloudflare routes, R2/D1, review pagination, prices, and producer/cuvée matching are deferred.
