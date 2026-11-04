@@ -8,7 +8,7 @@ Wine discovery and vintage resolution (Stage C) are separate from information re
 |---|---|---|
 | `IWineResolver<TCandidate, TWineId, TResolved>` (`src/wine-resolver.ts`) | Provider-independent candidate search and vintage-resolution contract | None specified by interface |
 | `AlgoliaResolver` (`src/algolia-resolver.ts`) | Search the Vivino Algolia index, retrieve candidates, resolve an exact vintage | Algolia app ID / search key |
-| `VivinoClient` (`src/client.ts`) | Fetch a known Vivino `vintageId`, wine-level tastes and ratings | No Algolia credentials or resolver |
+| `VivinoClient` (`src/client.ts`) | Enrich a known `vintageId`; optionally resolve a `wineId` and year via injected `IWineResolver` | No Algolia credentials in the client |
 
 ### Example
 
@@ -19,18 +19,20 @@ const resolver = new AlgoliaResolver({
   fetch: authorisedFetch,
   algolia: { appId: yourAppId, searchKey: yourSearchKey },
 });
-const client = new VivinoClient({ fetch: authorisedFetch }); // no resolver
+const client = new VivinoClient({ fetch: authorisedFetch, resolver });
 
 const { candidates } = await resolver.searchWines('example producer');
 // Confirm the correct producer and cuvée before choosing a candidate.
 const chosenWineId = candidates[0].id;
-const { vintageId } = await resolver.resolveVintage(chosenWineId, 2020);
-const profile = await client.getProfile(vintageId);
+const profile = await client.getProfileForYear(chosenWineId, 2020);
+// Without a resolver, enrichment by a known vintage ID still works:
+const infoOnly = new VivinoClient({ fetch: authorisedFetch });
+const knownProfile = await infoOnly.getProfile(12345);
 ```
 
 The generic interface has **no Vivino imports**. Each implementation chooses its own candidate, wine-ID, and resolved-identity types. `AlgoliaResolver` implements `IWineResolver<Wine, number, ResolvedVivinoVintage>` and additionally exposes `getWine` for its own indexed wine lookup.
 
-`VivinoClient` is intentionally **not injected with a resolver**. It is a standalone Vivino information client that accepts a resolved Vivino vintage ID. The calling workflow decides how to obtain and verify that ID. Another resolver could replace Algolia if it supplies compatible Vivino IDs; a different information provider could have a different client.
+`VivinoClient` optionally **accepts an injected resolver** via `{ resolver }`. `getProfileForYear(wineId, year)` delegates vintage-ID resolution to that interface and then fetches information, verifying that the returned wine and year match the request. No search credentials are stored by the information client. `getProfile(vintageId)` remains independently usable without a resolver. A different resolver can replace Algolia if it supplies compatible Vivino IDs.
 
 Search returns candidates, not verified matches. The Algolia resolver does not substitute a different year or `U.V.` when the requested vintage is unavailable. The Vivino information client preserves exact-vintage versus all-vintage ratings and labels taste data as wine-level.
 
