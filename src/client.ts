@@ -1,11 +1,13 @@
 /** Read-only Vivino enrichment by previously resolved vintage ID.
- * No Algolia keys, wine search or resolver injection belong here.
+ * No Algolia keys or wine search belong here; an optional IWineResolver
+ * can be injected for wine ID + year resolution.
  * Live use of unofficial endpoints requires authorisation from Vivino.
  */
 import { object, requestJson } from './http.ts';
-import type { Rating, Tastes, Vintage, WineProfile } from './types.ts';
+import type { IWineResolver } from './wine-resolver.ts';
+import type { Rating, Tastes, Vintage, WineProfile, Wine, ResolvedVivinoVintage } from './types.ts';
 
-export type VivinoOptions = { fetch?: typeof fetch; baseUrl?: string };
+export type VivinoOptions = { fetch?: typeof fetch; baseUrl?: string; resolver?: IWineResolver<Wine, number, ResolvedVivinoVintage> };
 
 function rating(average: unknown, count: unknown): Rating | null {
   return typeof average === 'number' && average > 0
@@ -29,10 +31,12 @@ export function ratingsFrom(vintage: Vintage): WineProfile['ratings'] {
 export class VivinoClient {
   private readonly request: typeof fetch;
   private readonly base: string;
+  private readonly resolver?: IWineResolver<Wine, number, ResolvedVivinoVintage>;
 
   constructor(options: VivinoOptions = {}) {
     this.request = options.fetch ?? fetch;
     this.base = (options.baseUrl ?? 'https://www.vivino.com').replace(/\/$/, '');
+    this.resolver = options.resolver;
   }
 
   async getVintage(vintageId: number): Promise<Vintage> {
@@ -48,6 +52,26 @@ export class VivinoClient {
   async getTastes(wineId: number): Promise<Tastes> {
     const data = await requestJson(this.request, this.base + '/api/wines/' + encodeURIComponent(wineId) + '/tastes');
     return object(data.tastes) as Tastes;
+  }
+
+  /** Delegate year selection to the injected strategy, then verify the returned identity. */
+  async getProfileForYear(wineId: number, year: number): Promise<WineProfile> {
+    if (!this.resolver) {
+      throw new Error('No wine resolver configured; inject an IWineResolver or call getProfile(vintageId)');
+    }
+    const resolved = await this.resolver.resolveVintage(wineId, year);
+    if (
+      resolved.provider !== 'vivino' || resolved.wineId !== wineId ||
+      resolved.year !== year || !Number.isSafeInteger(resolved.vintageId) ||
+      resolved.vintageId <= 0
+    ) {
+      throw new Error('Resolver returned an inconsistent Vivino vintage identity');
+    }
+    const profile = await this.getProfile(resolved.vintageId);
+    if (profile.wine.id !== wineId || profile.vintage.year !== year) {
+      throw new Error('Resolved vintage information does not match requested wine/year');
+    }
+    return profile;
   }
 
   async getProfile(vintageId: number): Promise<WineProfile> {
