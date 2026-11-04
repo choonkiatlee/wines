@@ -5,9 +5,9 @@
  */
 import { object, requestJson } from './http.ts';
 import type { IWineResolver } from './wine-resolver.ts';
-import type { Rating, Tastes, Vintage, WineProfile } from './types.ts';
+import type { Rating, Tastes, Vintage, WineProfile, Wine, ResolvedVivinoVintage } from './types.ts';
 
-export type VivinoOptions = { fetch?: typeof fetch; baseUrl?: string; resolver?: IWineResolver };
+export type VivinoOptions = { fetch?: typeof fetch; baseUrl?: string; resolver?: IWineResolver<Wine, number, ResolvedVivinoVintage> };
 
 function rating(average: unknown, count: unknown): Rating | null {
   return typeof average === 'number' && average > 0
@@ -31,7 +31,7 @@ export function ratingsFrom(vintage: Vintage): WineProfile['ratings'] {
 export class VivinoClient {
   private readonly request: typeof fetch;
   private readonly base: string;
-  private readonly resolver?: IWineResolver;
+  private readonly resolver?: IWineResolver<Wine, number, ResolvedVivinoVintage>;
 
   constructor(options: VivinoOptions = {}) {
     this.request = options.fetch ?? fetch;
