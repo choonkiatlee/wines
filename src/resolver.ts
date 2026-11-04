@@ -11,7 +11,7 @@ export type AlgoliaResolverOptions = { fetch?: typeof fetch; algolia: AlgoliaOpt
 /** @deprecated Use AlgoliaResolverOptions. */
 export type ResolverOptions = AlgoliaResolverOptions;
 
-export class AlgoliaResolver implements IWineResolver {
+export class AlgoliaResolver implements IWineResolver<Wine, number, ResolvedVivinoVintage> {
   private readonly request: typeof fetch;
   private readonly algolia: AlgoliaOptions;
 
@@ -37,7 +37,7 @@ export class AlgoliaResolver implements IWineResolver {
   }
 
   /** Returns candidates; the caller must confirm the right producer/cuvée. */
-  async searchWines(query: string, limit = 10): Promise<{ total: number; hits: Wine[] }> {
+  async searchWines(query: string, limit = 10): Promise<{ total: number; candidates: Wine[] }> {
     if (!query.trim()) throw new Error('Wine search query cannot be empty');
     if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new RangeError('limit must be 1..20');
     const data = await requestJson(this.request, this.url('/query'), {
@@ -47,7 +47,7 @@ export class AlgoliaResolver implements IWineResolver {
     if (!Array.isArray(data.hits)) throw new Error('Unexpected Vivino search response');
     return {
       total: typeof data.nbHits === 'number' ? data.nbHits : data.hits.length,
-      hits: data.hits as Wine[],
+      candidates: data.hits as Wine[],
     };
   }
 
