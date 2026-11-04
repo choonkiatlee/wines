@@ -1,0 +1,15 @@
+{
+  "name": "@choonkiatlee/wines",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Small TypeScript adapter for Vivino-shaped HTTP data (offline-first tests)",
+  "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "engines": { "node": ">=22.16" }
+}
