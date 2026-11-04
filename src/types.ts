@@ -9,13 +9,30 @@ export type WineStats = {
   wine_ratings_count?: number;
 };
 
+export type IndexedVintage = {
+  id: number;
+  year: number | string;
+  name?: string;
+  statistics?: WineStats;
+  has_valid_ratings?: boolean;
+};
+
 export type Wine = {
   id: number;
   name: string;
   winery?: { name?: string };
-  region?: { name?: string; country?: { code?: string } };
+  region?: { name?: string; country?: string | { code?: string } };
   statistics?: WineStats;
-  vintages?: Array<{ id: number; year: number | string }>;
+  vintages?: IndexedVintage[] | null;
+  description?: string | null;
+  alcohol?: number | null;
+  closure?: string | null;
+  non_vintage?: boolean;
+  style_id?: number | null;
+  grapes?: number[] | null;
+  foods?: number[] | null;
+  image?: { location?: string; variations?: Record<string, string> } | null;
+  updated_at?: string;
 };
 
 export type Vintage = {
@@ -124,4 +141,23 @@ export type ResolvedVivinoVintage = {
   wineId: number;
   vintageId: number;
   year: number;
+};
+
+/** Ratings observed in the index; missing counts are not assumed to be zero. */
+export type AlgoliaRating = { average: number; count: number | null; reviewsCount: number | null };
+export type AlgoliaWineProfile = {
+  wine: {
+    id: number; name: string; winery: string | null; region: string | null; country: string | null;
+    alcohol: number | null; closure: string | null; nonVintage: boolean | null;
+    grapeIds: number[] | null; foodIds: number[] | null; styleId: number | null; imageUrl: string | null;
+  };
+  vintage: { id: number; year: number } | null;
+  ratings: { vintage: AlgoliaRating | null; allVintages: AlgoliaRating | null };
+  vintageCounts: { ratings: number | null; reviews: number | null } | null;
+  description: { scope: 'wine'; text: string } | null;
+  source: 'vivino-algolia';
+  retrievedAt: string;
+  indexUpdatedAt: string | null;
+  sourceUrl: string;
+  warnings: string[];
 };

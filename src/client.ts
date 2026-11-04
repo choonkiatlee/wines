@@ -1,3 +1,4 @@
+import { VivinoAlgoliaClient } from './algolia-client.ts';
 /** Minimal Vivino HTTP client.
  * Uses Vivino's public-in-frontend Algolia search-only credentials for discovery.
  * These are unofficial endpoints: live automated access requires authorisation.
@@ -8,12 +9,6 @@ import type {
   Review, ReviewOptions, FlavorReviewOptions, PaginationOptions, PageInformation,
   PageInformationOptions, Prices, CheckoutPrice,
 } from './types.ts';
-
-// Vivino's frontend Algolia application and search-only key (not MCP credentials).
-// Publicly embedded in Vivino's frontend; NOT evidence of permission to scrape.
-const ALGOLIA_INDEX_URL = 'https://9takgwjuxl-dsn.algolia.net/1/indexes/WINES_prod';
-const ALGOLIA_APP_ID = '9TAKGWJUXL';
-const ALGOLIA_SEARCH_ONLY_KEY = '60c11b2f1068885161d95ca068d3a6ae';
 
 export type VivinoOptions = { fetch?: typeof fetch; baseUrl?: string };
 
@@ -61,12 +56,15 @@ function array(value: unknown, name: string): unknown[] {
   return value;
 }
 
+/** Experimental website enrichment. Prefer VivinoAlgoliaClient for normal menu profiles. */
 export class VivinoClient {
   private readonly request: typeof fetch;
   private readonly base: string;
+  private readonly algolia: VivinoAlgoliaClient;
 
   constructor(options: VivinoOptions = {}) {
     this.request = options.fetch ?? fetch;
+    this.algolia = new VivinoAlgoliaClient({ fetch: this.request });
     this.base = (options.baseUrl ?? 'https://www.vivino.com').replace(/\/$/, '');
   }
 
@@ -82,54 +80,17 @@ export class VivinoClient {
     });
   }
 
-  private algoliaHeaders(): HeadersInit {
-    return {
-      'content-type': 'application/json',
-      'x-algolia-application-id': ALGOLIA_APP_ID,
-      'x-algolia-api-key': ALGOLIA_SEARCH_ONLY_KEY,
-    };
+  /** Compatibility discovery methods; the primary client is VivinoAlgoliaClient. */
+  searchWines(query: string, limit = 10): Promise<{ total: number; candidates: Wine[] }> {
+    return this.algolia.searchWines(query, limit);
   }
 
-  /** Algolia returns candidate wines, not verified producer/cuvée matches. */
-  async searchWines(query: string, limit = 10): Promise<{ total: number; candidates: Wine[] }> {
-    if (!query.trim()) throw new Error('Wine search query cannot be empty');
-    if (!Number.isInteger(limit) || limit < 1 || limit > 20) {
-      throw new RangeError('limit must be 1..20');
-    }
-    const data = await requestJson(this.request, ALGOLIA_INDEX_URL + '/query', {
-      method: 'POST',
-      headers: this.algoliaHeaders(),
-      body: JSON.stringify({ query, hitsPerPage: limit }),
-    });
-    if (!Array.isArray(data.hits)) throw new Error('Unexpected Vivino search response');
-    return {
-      total: typeof data.nbHits === 'number' ? data.nbHits : data.hits.length,
-      candidates: data.hits as Wine[],
-    };
+  getWine(wineId: number): Promise<Wine> {
+    return this.algolia.getWine(wineId);
   }
 
-  /** Fetch a candidate wine and its list of indexed vintages from Vivino's Algolia index. */
-  async getWine(wineId: number): Promise<Wine> {
-    const data = await requestJson(
-      this.request,
-      ALGOLIA_INDEX_URL + '/' + encodeURIComponent(wineId),
-      { headers: this.algoliaHeaders() },
-    );
-    if (typeof data.id !== 'number') throw new Error('Unexpected Vivino wine response');
-    return data as Wine;
-  }
-
-  /** Match an exact year; never silently substitute a different year or U.V. */
-  async resolveVintage(wineId: number, year: number): Promise<ResolvedVivinoVintage> {
-    if (!Number.isInteger(year) || year < 1800 || year > 2100) {
-      throw new RangeError('year must be a valid four-digit vintage');
-    }
-    const wine = await this.getWine(wineId);
-    const vintage = wine.vintages?.find(v => Number(v.year) === year);
-    if (!vintage || !Number.isSafeInteger(vintage.id) || vintage.id <= 0) {
-      throw new Error('No ' + year + ' vintage found for wine ' + wineId);
-    }
-    return { provider: 'vivino', wineId, vintageId: vintage.id, year };
+  resolveVintage(wineId: number, year: number): Promise<ResolvedVivinoVintage> {
+    return this.algolia.resolveVintage(wineId, year);
   }
 
   async getVintage(vintageId: number): Promise<Vintage> {
@@ -263,7 +224,7 @@ export class VivinoClient {
       : /^\d{4}$/.test(vintage.year ?? '') ? Number(vintage.year) : null;
     const w = vintage.wine;
     return {
-      wine: { id: w.id, name: w.name, winery: w.winery?.name, region: w.region?.name, country: w.region?.country?.code },
+      wine: { id: w.id, name: w.name, winery: w.winery?.name, region: w.region?.name, country: typeof w.region?.country === 'string' ? w.region.country : w.region?.country?.code },
       vintage: { id: vintage.id, year },
       ratings,
       taste: tastes ? { scope: 'wine', structure: tastes.structure, flavors: tastes.flavor } : null,
