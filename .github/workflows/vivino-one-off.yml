@@ -1,4 +1,4 @@
-name: One-off Vivino integration check
+name: One-off Vivino TLS matrix
 on:
   pull_request:
     types: [opened, ready_for_review]
@@ -15,15 +15,15 @@ jobs:
         with:
           node-version: '24'
       - name: Install TypeScript
-        run: npm install --ignore-scripts --package-lock=false
+        run: npm install --ignore-scripts --no-save --package-lock=false undici@7.30.1
       - name: Typecheck and offline tests
         run: npm run typecheck && npm test
-      - name: Check every client method against live Vivino
-        run: node scripts/vivino-http-diagnostic.mjs
+      - name: Collect 12 HTTP and TLS diagnostic cases
+        run: node scripts/vivino-tls-matrix.mjs
       - name: Save per-function outputs and request diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vivino-live-check
+          name: vivino-tls-matrix
           path: integration-output/
-          retention-days: 7
+          retention-days: 14
