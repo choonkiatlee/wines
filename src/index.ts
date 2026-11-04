@@ -11,3 +11,7 @@ export type {
   PageInformationOptions, PageInformation, Currency, Market, Price, Merchant,
   PriceAvailability, Prices, CheckoutPrice,
 } from './types.ts';
+
+/** Multi-candidate enrichment for a parsed list of wine names. */
+export { enrichWines } from './enrichment.ts';
+export type { WineEnrichmentInput, WineEnrichmentOptions, WineEnrichmentProvider, WineEnrichmentRow, CompactWineMatch } from './enrichment.ts';
