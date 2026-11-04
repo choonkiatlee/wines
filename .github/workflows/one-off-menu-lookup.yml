@@ -1,0 +1,27 @@
+name: One-off live menu lookup
+on:
+  push:
+    branches:
+      - test/menu-live-sample-20261104
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Run merged pipeline on 47 transcribed menu wines
+        run: node --experimental-strip-types scripts/live-menu-smoke.mjs
+      - name: Preserve compact and full JSON outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-menu-lookup
+          path: |
+            menu-compact.json
+            menu-full-sample.json
+          if-no-files-found: warn
