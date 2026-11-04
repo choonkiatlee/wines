@@ -2,40 +2,40 @@
 
 ## Architecture
 
-The wine-list assistant distinguishes **resolution** (finding the right wine and vintage) from **enrichment** (retrieving information for an already resolved ID). This is the Stage C/D/E boundary in [issue #1](https://github.com/choonkiatlee/wines/issues/1).
+Wine discovery/identity resolution (Stage C) is separate from information retrieval (Stage D/E). See [issue #1](https://github.com/choonkiatlee/wines/issues/1).
 
-| Layer | API | Access configuration |
+| Component | Responsibility | Credentials |
 |---|---|---|
-| `IWineResolver<TCandidate, TWineId, TResolved>` (`src/wine-resolver.ts`) | Generic interface: `searchWines`, `resolveVintage` | Provider-independent |
-| `AlgoliaResolver` (`src/algolia-resolver.ts`) | Concrete adapter: `searchWines(query)`, `getWine(wineId)`, `resolveVintage(wineId, year)` | Algolia app ID / search key |
-| `VivinoClient` (`src/client.ts`) | `getVintage(vintageId)`, `getTastes(wineId)`, `getProfile(vintageId)` | No Algolia credentials |
-
-`searchWines` returns **candidates, not verified matches**. The calling workflow must confirm producer and cuvée before resolving a vintage. `resolveVintage` rejects missing years rather than falling back to the all-vintage aggregate. `getProfile` keeps vintage and all-vintage ratings separate, and correctly labels tastes as wine-level.
+| `IWineResolver<TCandidate, TWineId, TResolved>` (`src/wine-resolver.ts`) | Provider-independent strategy for searching candidates and resolving a vintage | None specified by interface |
+| `AlgoliaResolver` (`src/algolia-resolver.ts`) | Concrete search and exact-year resolution using the Vivino Algolia index | Algolia app ID / search key |
+| `VivinoClient` (`src/client.ts`) | Fetch a known `vintageId`, wine tastes and rating profiles; optional injected resolver for `getProfileForYear` | No Algolia credentials in client |
 
 ### Example
 
 ```ts
-import { VivinoClient, AlgoliaResolver } from './src/index.ts';
+import { AlgoliaResolver, VivinoClient } from './src/index.ts';
 
 const resolver = new AlgoliaResolver({
   fetch: authorisedFetch,
   algolia: { appId: yourAppId, searchKey: yourSearchKey },
 });
-const info = new VivinoClient({ fetch: authorisedFetch }); // no Algolia configuration
 
+const client = new VivinoClient({ fetch: authorisedFetch, resolver });
 const { candidates } = await resolver.searchWines('example producer');
-// Verify the matching wine manually or with a future Stage C matching component.
-const selectedWineId = candidates[0].id;
-const resolved = await resolver.resolveVintage(selectedWineId, 2020);
-const profile = await info.getProfile(resolved.vintageId);
-// profile.ratings.vintage and profile.ratings.allVintages are distinct
+// Confirm the producer and cuvée before selecting a candidate.
+const profile = await client.getProfileForYear(candidates[0].id, 2020);
+// Alternatively, a previously resolved vintage needs no resolver or search key:
+const infoOnly = new VivinoClient({ fetch: authorisedFetch });
+const knownProfile = await infoOnly.getProfile(12345);
 ```
 
-`AlgoliaResolver` implements the provider-independent, generic `IWineResolver<Wine, number, ResolvedVivinoVintage>` contract. Its `getWine` method is an Algolia-specific convenience; the generic contract only requires candidate discovery and vintage resolution. Other resolvers can have different candidate, ID and resolution types. They are **not injected** into `VivinoClient`, which is an independent Vivino-only information client accepting a resolved Vivino `vintageId`. A caller explicitly passes that ID between layers. Both clients use injectable standard `fetch`, suitable for Node or Cloudflare Workers, and require no database or MCP transport.
+**Swappability:** `VivinoClient` depends only on `IWineResolver<Wine, number, ResolvedVivinoVintage>`, not `AlgoliaResolver`. A different discovery strategy can be injected, including a curated map or another index, provided it resolves to Vivino wine/vintage IDs. The generic interface itself has no Vivino imports, so other providers may use other candidate and identifier types in their own clients.
+
+Candidate search does not verify a producer/cuvée. The resolver rejects a requested year that is not listed instead of falling back to another year or `U.V.`. The client checks that the resolved identity agrees with the retrieved vintage record and preserves vintage-specific versus all-vintage ratings. Taste data are labelled wine-level.
 
 ### Permissions
 
-Vivino does not offer a public developer API. Its terms restrict automated access/scraping without authorisation. These are **reverse-engineered, unofficial endpoints**, not a guarantee of anonymous access. Removing the Algolia credentials from the information client does **not** establish that its endpoints are public, reliably accessible or licensed for use. No live requests are made by the tests, and neither layer implements browser impersonation, cookie extraction, challenge bypass or blocked-request retries.
+Vivino has no public developer API; its terms prohibit unauthorised automated access. These endpoints are reverse-engineered and cannot be assumed to be licensed or reliably accessible. The tests make no live Vivino calls. No browser impersonation, session-cookie extraction, bot-protection bypass or blocked-request retries are included.
 
 ### Offline validation
 
@@ -45,8 +45,4 @@ npm run typecheck
 npm test
 ```
 
-Node 22.16+ and TypeScript are required for the included tests. Underlying field shapes follow [marco-vrinssen/vivino-mcp](https://github.com/marco-vrinssen/vivino-mcp/blob/main/src/vivino.js) and may change without warning.
-
-### Later work
-
-Stage C producer/cuvée matching and confidence thresholds, more provider implementations, reviews, prices, caching, live integration (subject to permission), Cloudflare deployment, R2 and D1 are intentionally deferred.
+Node 22.16+ is required for the test runner. Schema references: [marco-vrinssen/vivino-mcp](https://github.com/marco-vrinssen/vivino-mcp/blob/main/src/vivino.js). Cloudflare routes, R2/D1, review pagination, prices and producer/cuvée matching are deferred.
