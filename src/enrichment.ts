@@ -85,7 +85,7 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const wineryHits = overlap(query, winery);
   const relevantHits = overlap(query, [...new Set([...name, ...winery])]);
   const hits = overlap(query, [...new Set([...name, ...winery, ...region])]);
-  const threshold = query.length <= 2 ? query.length : Math.ceil(query.length * 0.5);
+  const threshold = Math.max(1, Math.ceil(query.length * 0.5));
   const beyondWinery = query.filter(word => !winery.some(other => similar(word, other)));
   if (relevantHits < 1 || hits < threshold ||
     (wineryHits && beyondWinery.length && !overlap(beyondWinery, [...name, ...region]))) return null;
@@ -109,7 +109,7 @@ function limitConcurrency(max: number) {
     return new Promise<T>((resolve, reject) => {
       const run = () => {
         active++;
-        void operation().then(resolve, reject).finally(() => {
+        void Promise.resolve().then(operation).then(resolve, reject).finally(() => {
           active--;
           waiting.shift()?.();
         });
