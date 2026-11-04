@@ -3,16 +3,19 @@
  * Live use of unofficial endpoints requires authorisation from Vivino.
  */
 import { requestJson } from './http.ts';
+import type { IWineResolver } from './wine-resolver.ts';
 import type { ResolvedVivinoVintage, Wine } from './types.ts';
 
 export type AlgoliaOptions = { appId: string; searchKey: string; host?: string };
-export type ResolverOptions = { fetch?: typeof fetch; algolia: AlgoliaOptions };
+export type AlgoliaResolverOptions = { fetch?: typeof fetch; algolia: AlgoliaOptions };
+/** @deprecated Use AlgoliaResolverOptions. */
+export type ResolverOptions = AlgoliaResolverOptions;
 
-export class VivinoResolver {
+export class AlgoliaResolver implements IWineResolver {
   private readonly request: typeof fetch;
   private readonly algolia: AlgoliaOptions;
 
-  constructor(options: ResolverOptions) {
+  constructor(options: AlgoliaResolverOptions) {
     if (!options.algolia?.appId || !options.algolia?.searchKey) {
       throw new Error('Algolia configuration required for wine resolution');
     }
@@ -69,3 +72,6 @@ export class VivinoResolver {
     return { provider: 'vivino', wineId, vintageId: vintage.id, year };
   }
 }
+
+/** @deprecated Use AlgoliaResolver. */
+export { AlgoliaResolver as VivinoResolver };
