@@ -6,7 +6,8 @@ The wine-list assistant distinguishes **resolution** (finding the right wine and
 
 | Layer | API | Access configuration |
 |---|---|---|
-| `VivinoResolver` (`src/resolver.ts`) | `searchWines(query)`, `getWine(wineId)`, `resolveVintage(wineId, year)` | Algolia app ID / search key |
+| `IWineResolver<TCandidate, TWineId, TResolved>` (`src/wine-resolver.ts`) | Generic interface: `searchWines`, `resolveVintage` | Provider-independent |
+| `AlgoliaResolver` (`src/algolia-resolver.ts`) | Concrete adapter: `searchWines(query)`, `getWine(wineId)`, `resolveVintage(wineId, year)` | Algolia app ID / search key |
 | `VivinoClient` (`src/client.ts`) | `getVintage(vintageId)`, `getTastes(wineId)`, `getProfile(vintageId)` | No Algolia credentials |
 
 `searchWines` returns **candidates, not verified matches**. The calling workflow must confirm producer and cuvée before resolving a vintage. `resolveVintage` rejects missing years rather than falling back to the all-vintage aggregate. `getProfile` keeps vintage and all-vintage ratings separate, and correctly labels tastes as wine-level.
@@ -14,23 +15,23 @@ The wine-list assistant distinguishes **resolution** (finding the right wine and
 ### Example
 
 ```ts
-import { VivinoClient, VivinoResolver } from './src/index.ts';
+import { VivinoClient, AlgoliaResolver } from './src/index.ts';
 
-const resolver = new VivinoResolver({
+const resolver = new AlgoliaResolver({
   fetch: authorisedFetch,
   algolia: { appId: yourAppId, searchKey: yourSearchKey },
 });
 const info = new VivinoClient({ fetch: authorisedFetch }); // no Algolia configuration
 
-const { hits } = await resolver.searchWines('example producer');
+const { candidates } = await resolver.searchWines('example producer');
 // Verify the matching wine manually or with a future Stage C matching component.
-const selectedWineId = hits[0].id;
+const selectedWineId = candidates[0].id;
 const resolved = await resolver.resolveVintage(selectedWineId, 2020);
 const profile = await info.getProfile(resolved.vintageId);
 // profile.ratings.vintage and profile.ratings.allVintages are distinct
 ```
 
-The resolver is replaceable without modifying `VivinoClient`; another resolver can supply the same `vintageId`. Both layers use an injectable standard `fetch`, suitable for Node or Cloudflare Workers, and no database or MCP transport is required.
+`AlgoliaResolver` implements the provider-independent, generic `IWineResolver<Wine, number, ResolvedVivinoVintage>` contract. Its `getWine` method is an Algolia-specific convenience; the generic contract only requires candidate discovery and vintage resolution. Other resolvers can have different candidate, ID and resolution types. They are **not injected** into `VivinoClient`, which is an independent Vivino-only information client accepting a resolved Vivino `vintageId`. A caller explicitly passes that ID between layers. Both clients use injectable standard `fetch`, suitable for Node or Cloudflare Workers, and require no database or MCP transport.
 
 ### Permissions
 
