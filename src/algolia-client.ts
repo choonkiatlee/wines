@@ -63,7 +63,10 @@ function profile(w: Wine, v?: IndexedVintage): AlgoliaWineProfile {
       imageUrl: image?.startsWith('//') ? 'https:' + image : image },
     vintage: v ? { id: v.id, year: Number(v.year) } : null,
     ratings: { vintage: vintageRating, allVintages },
-    vintageCounts: v ? { ratings: count(v.statistics?.ratings_count), reviews: count(v.statistics?.reviews_count) } : null,
+    vintageCounts: v ? {
+      ratings: v.statistics?.is_wine_rating === true ? null : count(v.statistics?.ratings_count),
+      reviews: v.statistics?.is_wine_rating === true ? null : count(v.statistics?.reviews_count),
+    } : null,
     description: description ? { scope: 'wine', text: description } : null,
     source: 'vivino-algolia', retrievedAt: new Date().toISOString(), indexUpdatedAt: text(w.updated_at),
     sourceUrl: 'https://www.vivino.com/w/' + w.id + (v ? '?year=' + v.year : ''), warnings,

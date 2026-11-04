@@ -61,3 +61,5 @@ npm test
 ```
 
 Node 22.16+ is required. Tests are offline with mocked HTTP responses, including a guard that primary profiles never call `www.vivino.com`. No recurring live workflow is installed. These unofficial index and website schemas can change; live checks are separate from deterministic tests. Publicly embedded credentials alone do not establish data-reuse rights; access for this investigation was authorised by the user.
+
+Primary client live verification: [GitHub Actions, 4 November 2026](https://github.com/choonkiatlee/wines/actions/runs/41855364544) passed all five indexed requests (search, wine read, resolution, overall profile, exact-year profile) with HTTP 200 and no website calls. Opus One 2022 returned 4.5/513 ratings/140 reviews. The final fallback-count regression guard was verified offline afterward; the final local suite has 36 passing tests.

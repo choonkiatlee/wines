@@ -76,6 +76,13 @@ test('explicit fallback and invalid validity flags never become exact-year score
     assert.equal(p.ratings.vintage, null);
   }
 });
+test('all-vintage fallback statistics cannot become vintage sample sizes', async () => {
+  const w = sample();
+  w.vintages[0].statistics = { status: 'Normal', is_wine_rating: true, ratings_average: 4.6, ratings_count: 97125, reviews_count: 1509 };
+  const p = await client(w).client.getProfileForYear(1911534, 2022);
+  assert.equal(p.ratings.vintage, null);
+  assert.deepEqual(p.vintageCounts, { ratings: null, reviews: null });
+});
 test('missing metadata and counts remain null, rather than fabricated zeroes', async () => {
   const w = { id: 7, name: 'Minimal', vintages: [{ id: 9, year: 2020, statistics: { status: 'Normal', ratings_average: 4 } }] };
   const p = await client(w).client.getProfileForYear(7, 2020);
