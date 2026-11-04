@@ -1,16 +1,16 @@
-import type { ResolvedVivinoVintage, Wine } from './types.ts';
-
-/**
- * Swappable wine-search and vintage-resolution strategy.
+/** Provider-independent contract for candidate discovery and vintage resolution.
  *
- * Implementations may use Algolia or another index, but must return Vivino
- * wine/vintage IDs: VivinoClient enriches those IDs using Vivino endpoints.
- * Other providers can implement this contract if they can map to Vivino IDs.
+ * Type parameters represent a provider's candidate, wine identifier, and
+ * resolved identity. This contract intentionally imports no Vivino types.
  *
- * A search result is a candidate, not a verified producer/cuvée match.
+ * Search returns candidates, not verified producer/cuvee matches.
  */
-export interface IWineResolver {
-  searchWines(query: string, limit?: number): Promise<{ total: number; hits: Wine[] }>;
-  getWine(wineId: number): Promise<Wine>;
-  resolveVintage(wineId: number, year: number): Promise<ResolvedVivinoVintage>;
+export interface WineSearchResult<TCandidate> {
+  total: number;
+  candidates: TCandidate[];
+}
+
+export interface IWineResolver<TCandidate, TWineId, TResolved> {
+  searchWines(query: string, limit?: number): Promise<WineSearchResult<TCandidate>>;
+  resolveVintage(wineId: TWineId, year: number): Promise<TResolved>;
 }
