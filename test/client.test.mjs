@@ -34,7 +34,7 @@ test('enrichment requires no Algolia credentials or search requests', async () =
   assert.ok(calls.every(c => new URL(c.url).hostname === 'www.vivino.com'));
   assert.ok(calls.every(c => !new Headers(c.init.headers).has('x-algolia-api-key')));
   assert.equal(typeof client.searchWines, 'undefined');
-  assert.equal(typeof client.getProfileForYear, 'function');
+  assert.equal(typeof client.getProfileForYear, 'undefined');
 });
 
 test('missing taste data is nonfatal but reported', async () => {
@@ -64,55 +64,3 @@ test('information HTTP errors preserve status and endpoint', async () => {
   });
 });
 
-function stubResolver(resolveVintage) {
-  return {
-    searchWines: async () => ({ total: 0, candidates: [] }),
-    resolveVintage,
-  };
-}
-
-test('injected IWineResolver enables ID+year enrichment without Algolia credentials', async () => {
-  const calls = [];
-  const resolvedRequests = [];
-  const client = new VivinoClient({
-    fetch: mockFetch(calls),
-    resolver: stubResolver(async (wineId, year) => {
-      resolvedRequests.push({ wineId, year });
-      return { provider: 'vivino', wineId: 7, vintageId: 9, year: 2020 };
-    }),
-  });
-  const profile = await client.getProfileForYear(7, 2020);
-  assert.deepEqual(resolvedRequests, [{ wineId: 7, year: 2020 }]);
-  assert.equal(profile.vintage.id, 9);
-  assert.equal(profile.ratings.vintage.average, 4.2);
-  assert.ok(calls.every(c => new URL(c.url).hostname === 'www.vivino.com'));
-  assert.ok(calls.every(c => !new Headers(c.init.headers).has('x-algolia-api-key')));
-});
-
-test('client without resolver can enrich an ID but cannot resolve a year', async () => {
-  const client = new VivinoClient({ fetch: mockFetch([]) });
-  await assert.rejects(() => client.getProfileForYear(7, 2020), /No wine resolver configured/);
-  assert.equal((await client.getProfile(9)).vintage.id, 9);
-});
-
-test('injected resolver cannot substitute a mismatched identity', async () => {
-  const calls = [];
-  const client = new VivinoClient({
-    fetch: mockFetch(calls),
-    resolver: stubResolver(async () => ({
-      provider: 'vivino', wineId: 777, vintageId: 9, year: 2020,
-    })),
-  });
-  await assert.rejects(() => client.getProfileForYear(7, 2020), /inconsistent Vivino vintage identity/);
-  assert.equal(calls.length, 0);
-});
-
-test('enrichment cross-checks the resolver against the returned vintage record', async () => {
-  const client = new VivinoClient({
-    fetch: mockFetch([]),
-    resolver: stubResolver(async () => ({
-      provider: 'vivino', wineId: 7, vintageId: 9, year: 2019,
-    })),
-  });
-  await assert.rejects(() => client.getProfileForYear(7, 2019), /does not match requested wine\/year/);
-});
