@@ -1,9 +1,10 @@
-name: VivinoClient checks
+name: One-off Vivino API integration probe
 
+# Temporarily trigger once when PR #3 is marked ready; no push/master CI.
+# Workflow-dispatch is for later explicit reruns, once this file is on master.
 on:
   pull_request:
-    branches: [master]
-  push:
+    types: [ready_for_review]
     branches: [master]
   workflow_dispatch:
 
@@ -11,26 +12,31 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Typecheck and offline tests
+  probe:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.number == 3
+    name: Live VivinoClient method-by-method smoke test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
-      - name: Check out repository
+      - name: Check out PR head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Set up Node.js
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      # No package-lock.json yet; use npm install rather than npm ci.
-      - name: Install dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Probe Vivino API (no retries or bot bypass)
+        run: node --experimental-strip-types scripts/live-vivino-smoke.mjs
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test VivinoClient (mocked HTTP; no live requests)
-        run: npm test
+      - name: Upload response report even if API calls fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vivino-live-output
+          path: vivino-live-output.json
+          if-no-files-found: warn
+          retention-days: 7
