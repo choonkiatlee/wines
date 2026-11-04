@@ -1,0 +1,25 @@
+name: One-off primary Algolia integration check
+on:
+  pull_request:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  integration:
+    if: github.head_ref == 'experiment/vivino-algolia-primary-check'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts --package-lock=false
+      - run: npm run typecheck && npm test
+      - run: node scripts/vivino-algolia-live.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vivino-algolia-primary
+          path: integration-output/
+          retention-days: 14
