@@ -22,9 +22,9 @@ function resolver(calls) {
 
 test('search returns candidates and keeps Algolia headers in resolver', async () => {
   const calls = [];
-  const { total, hits } = await resolver(calls).searchWines('example', 2);
+  const { total, candidates } = await resolver(calls).searchWines('example', 2);
   assert.equal(total, 1);
-  assert.equal(hits[0].id, 7);
+  assert.equal(candidates[0].id, 7);
   assert.equal(new Headers(calls[0].init.headers).get('x-algolia-api-key'), 'example-search-key');
   assert.equal(new URL(calls[0].url).hostname, '9takgwjuxl-dsn.algolia.net');
 });
