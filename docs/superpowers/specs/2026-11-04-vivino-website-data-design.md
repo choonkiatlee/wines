@@ -1,0 +1,5 @@
+# Vivino website data
+
+Extend the existing single TypeScript VivinoClient with the website endpoints inspected on 4 November 2026. Preserve existing methods and built-in Algolia discovery. Add website JSON headers, typed paginated reviews (helpful/latest and flavor filtering), page information, batch prices and merchant checkout prices. Retain upstream market, currency, vintage, bottle size, flavor counts and nullable taste structure values. Keep price fetching explicit rather than adding network calls to existing profiles.
+
+Prefer direct JSON endpoints over HTML parsing: they already return the needed data and avoid parsing executable page state. No resolver abstractions or browser dependencies. Do not present `has_valid_ratings: false`, unspecified-year or non-vintage records as exact-vintage ratings. Year-specific page information must reject substitutions. Errors propagate without blocked-request retries. Mocked tests cover contracts; an explicitly run live smoke check verifies access separately. Deliver a focused PR without merging or installing recurring CI.
