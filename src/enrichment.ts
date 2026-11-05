@@ -2,7 +2,12 @@
 import { VivinoAlgoliaClient } from './algolia-client.ts';
 import type { AlgoliaWineProfile, Wine } from './types.ts';
 
-export type WineEnrichmentInput = { name: string; year?: number };
+/** Wine category as printed on a restaurant menu; absent means no category restriction. */
+export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'dessert' | 'fortified';
+const WINE_TYPE_IDS: Record<WineType, number> = {
+  red: 1, white: 2, sparkling: 3, rose: 4, dessert: 5, fortified: 6,
+};
+export type WineEnrichmentInput = { name: string; year?: number; type?: WineType };
 export type CompactWineMatch = {
   name: string;
   year: number | null;
@@ -108,6 +113,13 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const winery = significant(wine.winery?.name ?? '');
   const region = significant(wine.region?.name ?? '');
   if (!query.length) return null;
+  // The Algolia wine record includes type_id. A verified conflicting type is not
+  // a plausible candidate; missing or unfamiliar type_ids remain eligible.
+  const indexedType = wine.type_id;
+  if (input.type !== undefined &&
+    typeof indexedType === 'number' &&
+    Object.values(WINE_TYPE_IDS).includes(indexedType) &&
+    indexedType !== WINE_TYPE_IDS[input.type]) return null;
   const nameHits = overlap(query, name);
   const wineryHits = overlap(query, winery);
   const relevantHits = overlap(query, [...name, ...winery]);
@@ -188,6 +200,8 @@ export async function enrichWines(inputs: readonly WineEnrichmentInput[], option
     if (!input || typeof input.name !== 'string' || !input.name.trim()) throw new TypeError('Each wine needs a nonempty name');
     if (input.year !== undefined && (!Number.isInteger(input.year) || input.year < 1800 || input.year > 2100))
       throw new RangeError('year must be a valid four-digit vintage');
+    if (input.type !== undefined && (typeof input.type !== 'string' || !Object.hasOwn(WINE_TYPE_IDS, input.type)))
+      throw new TypeError('type must be red, white, rose, sparkling, dessert, or fortified');
   }
   const client = options.client ?? new VivinoAlgoliaClient();
   const scheduled = limitConcurrency(concurrency);
