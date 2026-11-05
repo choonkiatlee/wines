@@ -29,7 +29,7 @@ export type Wine = {
   closure?: string | null;
   non_vintage?: boolean;
   style_id?: number | null;
-  /** Indexed Vivino wine category: 1 red, 2 white, 3 sparkling, 4 rose, 5 dessert, 6 fortified. */
+  /** Indexed Vivino wine category: 1 red, 2 white, 3 sparkling, 4 rose, 7 dessert, 24 fortified. */
   type_id?: number | null;
   grapes?: number[] | null;
   foods?: number[] | null;
