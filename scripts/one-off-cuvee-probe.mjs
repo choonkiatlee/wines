@@ -31,4 +31,15 @@ for(const check of benchmark.spotChecks){
   console.log('MENU_SPOTCHECK',JSON.stringify({input:row?.input.name,expected:check.expectedTopWineId,actual:actualId,ok}));
   if(!ok) failed = true;
 }
+// Optional category is derived from menu section, not from the name string.
+const typedExamples = [
+  { name: 'Fanny Sabre Anatole', type: 'red' },
+  { name: 'Fanny Sabre Anatole', type: 'white' },
+  { name: 'Fanny Sabre Anatole', type: 'rose' },
+  { name: 'Dom Pérignon Brut', type: 'sparkling' },
+];
+const typedRows = await enrichWines(typedExamples, { concurrency: 3 });
+console.log('MENU_TYPED_SAMPLE', JSON.stringify(typedExamples.map((input, i) => ({
+  input, matches: typedRows[i].matches.map(m => ({name: m.name, url: m.url})),
+}))));
 if(failed) process.exitCode=1;
