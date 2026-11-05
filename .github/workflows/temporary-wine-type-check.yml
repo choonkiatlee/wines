@@ -21,7 +21,7 @@ jobs:
           node --experimental-strip-types --input-type=module <<'NODE'
           import {VivinoAlgoliaClient} from './src/index.ts';
           const client = new VivinoAlgoliaClient();
-          for(const name of ['Fanny Sabre Anatole','Dom Pérignon Brut','Opus One','Klabjan White Label','G.D. Vajra Barbera d Alba']){
+          for(const name of ['Fanny Sabre Anatole','Dom Pérignon Brut','Opus One','Klabjan White Label','G.D. Vajra Barbera d Alba', 'Château d’Yquem', 'Taylor Tawny Port']){
             const {candidates}=await client.searchWines(name,15);
             console.log('TYPE_PROBE',JSON.stringify({
               input:name,
