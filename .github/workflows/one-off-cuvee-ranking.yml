@@ -1,0 +1,28 @@
+name: One-off cuvee ranking comparison
+on:
+  push:
+    branches: [feat/cuvee-aware-ranking]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - run: npm install --ignore-scripts
+      - run: npm run typecheck
+      - run: npm test
+      - name: Capture live candidates for restaurant menu
+        run: node --experimental-strip-types scripts/one-off-cuvee-probe.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cuvee-probe
+          path: |
+            menu-search-hits.json
+            menu-lookup.json
+          if-no-files-found: warn
