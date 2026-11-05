@@ -119,7 +119,7 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   // Partial cuvee agreement is allowed, so variants and nearby cuvees can still appear.
   if (relevantHits < 1 || hits < threshold || (cuvee.length > 0 && cuveeHits === 0)) return null;
   const exactName = tokens(wine.name).join(' ') === tokens(input.name).join(' ');
-  const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ') === tokens(input.name).join(' ');
+  const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ')).join(' ') === tokens(input.name).join(' ');
   const vintageAvailable = input.year !== undefined && wine.vintages?.some(v => Number(v.year) === input.year);
   const extraNameTokens = Math.max(0, name.length - overlap(name, [...query, ...winery]));
   return 100 * hits / query.length + 20 * nameHits / query.length +
