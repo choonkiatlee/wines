@@ -6,7 +6,7 @@
 import { enrichWines } from './src/index.ts';
 
 const inputs = [
-  { name: 'Opus One', year: 2022 },
+  { name: 'Opus One', year: 2022, type: 'red' },
   { name: "G.D. Vajra Barbera d'Alba" },
 ];
 
@@ -17,7 +17,7 @@ const full = await enrichWines(inputs, { returnAll: true });
 
 ## Contract
 
-- `WineEnrichmentInput`: `{ name: string; year?: number }`. Invalid input rejects early.
+- `WineEnrichmentInput`: `{ name: string; year?: number; type?: WineType }`. `name` is required; `year` and `type` are optional. Allowed `type` values: `red`, `white`, `rose`, `sparkling`, `dessert`, `fortified`. Invalid input rejects early.
 - `WineEnrichmentRow<T>`: `{ matches: T[]; error?: 'upstream_unavailable' }`.
 - Default candidate: `{ name, year, rating: {score,count,scope}|null, description, url }`.
 - `returnAll: true`: the entire existing `AlgoliaWineProfile`, including IDs, wine/region, both rating scopes and counts, indexed vintage, warnings, source and retrieval timestamp.
@@ -37,6 +37,15 @@ A deterministic score rewards informative token coverage in the indexed wine nam
 **Limits:** `Fanny Sabre Anatole` can legitimately return Blanc, Rouge and Rosé; the minimal API input contains no colour context so it cannot choose the red wine. `Giuseppe Cipolla Le Robbe` still had no candidate in this live check.
 
 **Tradeoff:** conservative token-based filtering is not exhaustive fuzzy wine-name identification. An unusual alias, translated cuvée name, or severely misspelled producer can be missed. An indexed year is not proof that it was commercially produced. The external LLM remains responsible for deciding/abstaining.
+
+## Optional wine category
+
+When the caller knows the menu section, include `type: 'red'` (or one of the other values above). This is **not** inferred from the bottle name; it uses the indexed wine's `type_id`, which was verified with live Vivino Algolia search hits: red `1`, white `2`, sparkling `3`, rosé `4`, dessert `7`, fortified `24`.
+
+- Explicitly conflicting **known** types are excluded before top-three selection, so `Fanny Sabre Anatole` with `type: 'red'` cannot return indexed Blanc or Rosé alternatives.
+- Confirmed type agreement gets a small `+12` rank bonus. Wines with **missing or unrecognized** type IDs remain eligible, avoiding false no-match results from incomplete metadata.
+- When omitted, the algorithm behaves exactly as before; no type-specific query is added, no additional network calls, and the compact/full output schemas are unchanged.
+- Sparkling rosé is indexed under `sparkling` (type 3), rather than still `rose` (type 4). Orange/skin-contact is not a separate verified index category; omit `type` if that classification is needed.
 
 ## Profiles, performance and provenance
 
