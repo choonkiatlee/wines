@@ -20,7 +20,7 @@ export type WineEnrichmentOptions = {
   client?: WineEnrichmentProvider;
 };
 
-const STOPWORDS = new Set(['a', 'and', 'd', 'da', 'de', 'del', 'des', 'di', 'do', 'du', 'et', 'la', 'le', 'les', 'of', 'the']);
+const STOPWORDS = new Set(['a', 'and', 'chateau', 'cuvee', 'd', 'da', 'de', 'del', 'des', 'di', 'do', 'domaine', 'du', 'et', 'la', 'le', 'les', 'of', 'the']);
 
 function tokens(value: string): string[] {
   const raw = value.toLowerCase().replace(/æ/g, 'ae').replace(/œ/g, 'oe').replace(/ß/g, 'ss')
@@ -72,8 +72,35 @@ function similar(a: string, b: string): boolean {
   }
   return false;
 }
+/** Token coverage includes joined/split spellings: 'Crazy Lud' <-> 'Crazylud'. */
 function overlap(query: string[], candidate: string[]): number {
-  return query.filter(word => candidate.some(other => similar(word, other))).length;
+  const covered = query.map(word => candidate.some(other => similar(word, other)));
+  for (let i = 0; i < query.length - 1; i++) {
+    if (candidate.some(other => similar(query[i] + query[i + 1], other))) {
+      covered[i] = true;
+      covered[i + 1] = true;
+    }
+  }
+  for (let i = 0; i < query.length; i++) {
+    for (let j = 0; j < candidate.length - 1; j++) {
+      if (similar(query[i], candidate[j] + candidate[j + 1])) covered[i] = true;
+    }
+  }
+  return covered.filter(Boolean).length;
+}
+
+/** Use indexed winery tokens to locate the producer prefix; compare the remaining cuvee independently.
+ * A leading alias such as 'Oszkar' is treated as part of 'Oszkar Maurer' even if winery is just 'Maurer'.
+ */
+function cuveeTokens(query: string[], winery: string[]): string[] {
+  if (!winery.length) return [];
+  let producerEnd = -1;
+  for (let i = 0; i < query.length; i++) {
+    if (winery.some(word => similar(query[i], word))) producerEnd = i;
+    else if (producerEnd >= 0) break;
+  }
+  if (producerEnd < 0) return [];
+  return query.slice(producerEnd + 1).filter(word => !winery.some(producer => similar(word, producer)));
 }
 function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const query = significant(input.name);
@@ -83,18 +110,24 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   if (!query.length) return null;
   const nameHits = overlap(query, name);
   const wineryHits = overlap(query, winery);
-  const relevantHits = overlap(query, [...new Set([...name, ...winery])]);
-  const hits = overlap(query, [...new Set([...name, ...winery, ...region])]);
+  const relevantHits = overlap(query, [...name, ...winery]);
+  const hits = overlap(query, [...name, ...winery, ...region]);
   const threshold = Math.max(1, Math.ceil(query.length * 0.5));
-  const beyondWinery = query.filter(word => !winery.some(other => similar(word, other)));
-  if (relevantHits < 1 || hits < threshold ||
-    (wineryHits && beyondWinery.length && !overlap(beyondWinery, [...name, ...region]))) return null;
+  const cuvee = cuveeTokens(query, winery);
+  const cuveeHits = overlap(cuvee, [...name, ...region]);
+  // A producer-only result for a named cuvee is worse than no candidate.
+  // Partial cuvee agreement is allowed, so variants and nearby cuvees can still appear.
+  if (relevantHits < 1 || hits < threshold || (cuvee.length > 0 && cuveeHits === 0)) return null;
   const exactName = tokens(wine.name).join(' ') === tokens(input.name).join(' ');
-  const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ')).join(' ') === tokens(input.name).join(' ');
+  const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ').join(' ') === tokens(input.name).join(' ');
   const vintageAvailable = input.year !== undefined && wine.vintages?.some(v => Number(v.year) === input.year);
+  const extraNameTokens = Math.max(0, name.length - overlap(name, [...query, ...winery]));
   return 100 * hits / query.length + 20 * nameHits / query.length +
     6 * wineryHits / query.length + (exactName || exactFull ? 20 : 0) +
-    (vintageAvailable ? 3 : 0) - Math.max(0, name.length + winery.length - query.length) * 0.3;
+    (cuvee.length ? 45 * cuveeHits / cuvee.length +
+      (cuveeHits === cuvee.length ? 12 : 0) - 10 * (cuvee.length - cuveeHits) : 0) +
+    (vintageAvailable ? 3 : 0) - 3 * extraNameTokens -
+    Math.max(0, name.length + winery.length - query.length) * 0.3;
 }
 function rank(input: WineEnrichmentInput, candidates: Wine[]): Wine[] {
   return candidates.map((wine, index) => ({ wine, index, score: relevance(input, wine) }))
