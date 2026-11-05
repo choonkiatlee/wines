@@ -1,0 +1,215 @@
+{
+  "source": "Red-wine menu photo, 2026-11-04; manual transcription used for the first 47-row live probe",
+  "purpose": "Repeatable, real-world retrieval/ranking benchmark; not verified ground-truth identities.",
+  "inputs": [
+    {
+      "name": "Mas de la Fonte Ronde Pom Pon",
+      "year": 2023
+    },
+    {
+      "name": "Les Vignobles Foncalieu Réserve de l'Abbé",
+      "year": 2023
+    },
+    {
+      "name": "Domaine Bassac Mangalh",
+      "year": 2023
+    },
+    {
+      "name": "Château Pesquié Syrah du Pesquié",
+      "year": 2022
+    },
+    {
+      "name": "Christina Kuhlbart",
+      "year": 2025
+    },
+    {
+      "name": "Château Peyros Héritage",
+      "year": 2021
+    },
+    {
+      "name": "Beulah Violetta Stesso Stesso",
+      "year": 2024
+    },
+    {
+      "name": "Raúl Pérez Saint Jacques",
+      "year": 2023
+    },
+    {
+      "name": "Cauzón Lozano",
+      "year": 2021
+    },
+    {
+      "name": "Roman Le Bars Homme de la Roche",
+      "year": 2025
+    },
+    {
+      "name": "Niepoort Nat Cool",
+      "year": 2021
+    },
+    {
+      "name": "Mauro Franchino Coste della Sesia",
+      "year": 2024
+    },
+    {
+      "name": "Oszkár Maurer Crazy Lud",
+      "year": 2024
+    },
+    {
+      "name": "Strekov 1075 Fred #12"
+    },
+    {
+      "name": "Aptsiauri Saperavi",
+      "year": 2024
+    },
+    {
+      "name": "Gianni Doglia Genio",
+      "year": 2025
+    },
+    {
+      "name": "Vindiou Brèves de Comptoir",
+      "year": 2023
+    },
+    {
+      "name": "Domaine Azzara Le Rêve",
+      "year": 2023
+    },
+    {
+      "name": "G.D. Vajra Barbera d'Alba",
+      "year": 2025
+    },
+    {
+      "name": "Etienne Seignov(e)rt Gentil Monstre",
+      "year": 2024
+    },
+    {
+      "name": "Pernot Père et Fils Bourgogne Côte d'Or",
+      "year": 2023
+    },
+    {
+      "name": "L'Ile Rouge Confluence",
+      "year": 2021
+    },
+    {
+      "name": "Cesar Fernández Díaz Espantaburros",
+      "year": 2024
+    },
+    {
+      "name": "Klabjan White Label",
+      "year": 2021
+    },
+    {
+      "name": "Clothilde Legrand La Chaintree",
+      "year": 2015
+    },
+    {
+      "name": "Bott Frigyes Kekfrankos",
+      "year": 2023
+    },
+    {
+      "name": "Les Grillons Esprit Libre",
+      "year": 2024
+    },
+    {
+      "name": "Bruno Duchêne La Luna",
+      "year": 2024
+    },
+    {
+      "name": "La Prévostura Muntacc",
+      "year": 2021
+    },
+    {
+      "name": "Proprietà Sperino Uvaggio",
+      "year": 2021
+    },
+    {
+      "name": "Hervé Souhaut La Souteronne",
+      "year": 2024
+    },
+    {
+      "name": "Bonnet Cotton Régnié",
+      "year": 2023
+    },
+    {
+      "name": "Bencze Birtok Atlas",
+      "year": 2022
+    },
+    {
+      "name": "Oszkár Maurer Krisztus",
+      "year": 2022
+    },
+    {
+      "name": "Noëlla Morantin Le Printemps",
+      "year": 2022
+    },
+    {
+      "name": "La Ferme Pasteur Font du Loup",
+      "year": 2024
+    },
+    {
+      "name": "Antoine Sanzay La Paterne",
+      "year": 2024
+    },
+    {
+      "name": "Fanny Sabre Anatole",
+      "year": 2025
+    },
+    {
+      "name": "Domaine la Luminaille Garance",
+      "year": 2023
+    },
+    {
+      "name": "Dard et Ribo Printemps",
+      "year": 2025
+    },
+    {
+      "name": "Arpepe Rosso di Valtellina",
+      "year": 2023
+    },
+    {
+      "name": "Domaine du Coulet No Wine's Land",
+      "year": 2023
+    },
+    {
+      "name": "Giuseppe Cipolla Le Robbe",
+      "year": 2023
+    },
+    {
+      "name": "Jules Métras Bijou",
+      "year": 2021
+    },
+    {
+      "name": "Les Grillons Calcaires",
+      "year": 2024
+    },
+    {
+      "name": "Clos Venturi Brama",
+      "year": 2024
+    },
+    {
+      "name": "Tre.mila E.Migrante",
+      "year": 2022
+    }
+  ],
+  "spotChecks": [
+    {
+      "inputIndex": 0,
+      "expectedTopWineId": 1741716,
+      "reason": "Pom Pon spelling vs Pompon"
+    },
+    {
+      "inputIndex": 12,
+      "expectedTopWineId": 8421921,
+      "reason": "Crazy Lud should rank Crazylud, not Maurer Jumbo"
+    },
+    {
+      "inputIndex": 33,
+      "expectedTopWineId": 7334350,
+      "reason": "Krisztus should rank Nagy-Krisztus, not unrelated Maurer wines"
+    },
+    {
+      "inputIndex": 18,
+      "expectedTopWineId": 1100127,
+      "reason": "G.D. Vajra Barbera d'Alba unchanged"
+    }
+  ]
+}

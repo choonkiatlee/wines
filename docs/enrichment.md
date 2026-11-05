@@ -6,7 +6,7 @@
 import { enrichWines } from './src/index.ts';
 
 const inputs = [
-  { name: 'Opus One', year: 2022 },
+  { name: 'Opus One', year: 2022, type: 'red' },
   { name: "G.D. Vajra Barbera d'Alba" },
 ];
 
@@ -17,7 +17,7 @@ const full = await enrichWines(inputs, { returnAll: true });
 
 ## Contract
 
-- `WineEnrichmentInput`: `{ name: string; year?: number }`. Invalid input rejects early.
+- `WineEnrichmentInput`: `{ name: string; year?: number; type?: WineType }`. `name` is required; `year` and `type` are optional. Allowed `type` values: `red`, `white`, `rose`, `sparkling`, `dessert`, `fortified`. Invalid input rejects early.
 - `WineEnrichmentRow<T>`: `{ matches: T[]; error?: 'upstream_unavailable' }`.
 - Default candidate: `{ name, year, rating: {score,count,scope}|null, description, url }`.
 - `returnAll: true`: the entire existing `AlgoliaWineProfile`, including IDs, wine/region, both rating scopes and counts, indexed vintage, warnings, source and retrieval timestamp.
@@ -28,9 +28,24 @@ const full = await enrichWines(inputs, { returnAll: true });
 
 One full-name Algolia search (15 hits) starts each row. When fewer than three plausible candidates are found, try up to two distinct follow-up queries: accent/punctuation-folded, then a shortened set of informative tokens. Search results are deduplicated by wine ID. All queries within a batch share an in-flight promise cache.
 
-A deterministic score rewards informative token coverage in the indexed wine name, winery and region; exact name agreement; and indexed availability of the requested vintage as a small tiebreaker. Very short/common particles are ignored. Long tokens allow a one-character typo or adjacent transposition. Candidates with no relevant name/producer overlap or an obvious producer-only match to the wrong cuvée are excluded. Top three are chosen before enrichment, identically in compact/full modes.
+A deterministic score rewards informative token coverage in the indexed wine name, winery and region; exact name agreement; and indexed availability of the requested vintage as a small tiebreaker. Generic particles and labels (such as *château*, *domaine* and *cuvée*) are ignored. Long tokens allow one edit or adjacent transposition. Adjacent words may match one indexed word, e.g. `Crazy Lud` ↔ `Crazylud` and `Pom Pon` ↔ `Pompon`.
+
+**Producer/cuvée evidence is handled separately.** Indexed winery tokens locate the producer portion of the search phrase; the remaining distinctive words are treated as the requested cuvée. A candidate that matches only the producer but **none** of those cuvée words is filtered out. Partial cuvée overlap remains eligible, with a ranking penalty for unmatched terms, so related numbered or regional variants can still appear. Producer aliases before the winery token are supported (e.g. `Oszkár Maurer Krisztus` where the index calls the winery `Maurer`). If no winery token is recognizable, the matcher retains the permissive full-name fallback rather than inventing a split. Top three are chosen before enrichment, identically in compact/full modes.
+
+**Regression benchmark (5 November 2026).** The 47-wine photo transcription is saved as `test/fixtures/restaurant-menu-2026-11-04.json`. Comparing the same live menu before/after the ranking change, nonempty rows improved from 45/47 to 46/47, with 0 upstream errors. Three top candidates improved: Pompon Rouge, Maurer Crazylud, and Maurer Kadarka Nagy-Krisztus; the other 44 top candidates were unchanged. Seven deterministic mocked tests cover the specific cuvée and ambiguity cases. Run the opt-in live check manually with `node --experimental-strip-types scripts/one-off-cuvee-probe.mjs`; it creates local JSON artifacts and checks four spot selections. These examples are **plausible candidates, not verified identities**; the live source index changes over time.
+
+**Limits:** `Fanny Sabre Anatole` can legitimately return Blanc, Rouge and Rosé; the minimal API input contains no colour context so it cannot choose the red wine. `Giuseppe Cipolla Le Robbe` still had no candidate in this live check.
 
 **Tradeoff:** conservative token-based filtering is not exhaustive fuzzy wine-name identification. An unusual alias, translated cuvée name, or severely misspelled producer can be missed. An indexed year is not proof that it was commercially produced. The external LLM remains responsible for deciding/abstaining.
+
+## Optional wine category
+
+When the caller knows the menu section, include `type: 'red'` (or one of the other values above). This is **not** inferred from the bottle name; it uses the indexed wine's `type_id`, which was verified with live Vivino Algolia search hits: red `1`, white `2`, sparkling `3`, rosé `4`, dessert `7`, fortified `24`.
+
+- Explicitly conflicting **known** types are excluded before top-three selection, so `Fanny Sabre Anatole` with `type: 'red'` cannot return indexed Blanc or Rosé alternatives.
+- Confirmed type agreement gets a small `+12` rank bonus. Wines with **missing or unrecognized** type IDs remain eligible, avoiding false no-match results from incomplete metadata.
+- When omitted, the algorithm behaves exactly as before; no type-specific query is added, no additional network calls, and the compact/full output schemas are unchanged.
+- Sparkling rosé is indexed under `sparkling` (type 3), rather than still `rose` (type 4). Orange/skin-contact is not a separate verified index category; omit `type` if that classification is needed.
 
 ## Profiles, performance and provenance
 

@@ -44,6 +44,22 @@ The inspected index records do not contain review text, numeric acidity/tannin/b
 
 Algolia credentials are Vivino's publicly embedded application ID/search-only key and `WINES_prod` index, not MCP credentials. They remain internal to the concrete client; no caller credentials, generic resolver or configuration layer is required. An optional injected `fetch` supports tests and caller-controlled request policies. No retries are performed after HTTP errors.
 
+## Multi-candidate menu enrichment
+
+`enrichWines` wraps the primary Algolia client with candidate search, lightweight ranking, and exact-vintage/overall rating fallback. It returns 0–3 candidates for each input (in the original order), leaving final menu identification to the external LLM.
+
+```ts
+import { enrichWines } from './src/index.ts';
+
+const result = await enrichWines([
+  { name: 'Fanny Sabre Anatole', type: 'red' },
+  { name: 'Opus One', year: 2022 },
+]);
+const full = await enrichWines([{ name: 'Opus One', year: 2022 }], { returnAll: true });
+```
+
+`type` is optional: `red`, `white`, `rose`, `sparkling`, `dessert`, or `fortified`. If supplied, indexed candidates with a **known conflicting** Vivino type are excluded, while missing or unfamiliar type IDs stay eligible. The output schema and behaviour without `type` are unchanged. See [the pipeline design and regression benchmark](docs/enrichment.md).
+
 ## Experimental website enrichment
 
 The existing `VivinoClient` remains available for compatibility and optional experiments with `getVintage`, `getTastes`, `getReviews`, `getReviewsWithFlavors`, `getPageInformation`, `getPrices` and `getCheckoutPrices`. Its discovery methods delegate to the same Algolia client. Its `getProfile(vintageId)` and `getProfileForYear` still use website APIs; **these are not the primary profile methods**. The two clients intentionally have different `getProfile` identifier semantics, so choose the class explicitly.
