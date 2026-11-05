@@ -76,8 +76,8 @@ test('sparkling filters out known still wines and handles champagne type IDs', a
 
 test('dessert and fortified type IDs are treated as distinct categories', async () => {
   const wines = [
-    wine(21, 'Reserve', 5, 'Cellar'),
-    wine(22, 'Reserve', 6, 'Cellar'),
+    wine(21, 'Reserve', 7, 'Cellar'),
+    wine(22, 'Reserve', 24, 'Cellar'),
   ];
   const { client } = provider(wines);
   const [dessert, fortified] = await enrichWines([
