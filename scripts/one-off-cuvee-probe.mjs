@@ -26,7 +26,7 @@ let failed = false;
 for(const check of benchmark.spotChecks){
   const row = report[check.inputIndex];
   const url = row?.matches?.[0]?.url ?? '';
-  const actualId = Number(url.match(/\\/w\\/(\\d+)/)?.[1] || 0);
+  const actualId = url ? Number(new URL(url).pathname.split('/').at(-1)) : 0;
   const ok = actualId === check.expectedTopWineId;
   console.log('MENU_SPOTCHECK',JSON.stringify({input:row?.input.name,expected:check.expectedTopWineId,actual:actualId,ok}));
   if(!ok) failed = true;
