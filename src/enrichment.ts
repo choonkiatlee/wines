@@ -133,12 +133,13 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const exactName = tokens(wine.name).join(' ') === tokens(input.name).join(' ');
   const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ')).join(' ') === tokens(input.name).join(' ');
   const vintageAvailable = input.year !== undefined && wine.vintages?.some(v => Number(v.year) === input.year);
+  const typeBonus = input.type !== undefined && indexedType === WINE_TYPE_IDS[input.type] ? 12 : 0;
   const extraNameTokens = Math.max(0, name.length - overlap(name, [...query, ...winery]));
   return 100 * hits / query.length + 20 * nameHits / query.length +
     6 * wineryHits / query.length + (exactName || exactFull ? 20 : 0) +
     (cuvee.length ? 45 * cuveeHits / cuvee.length +
       (cuveeHits === cuvee.length ? 12 : 0) - 10 * (cuvee.length - cuveeHits) : 0) +
-    (vintageAvailable ? 3 : 0) - 3 * extraNameTokens -
+    (vintageAvailable ? 3 : 0) + typeBonus - 3 * extraNameTokens -
     Math.max(0, name.length + winery.length - query.length) * 0.3;
 }
 function rank(input: WineEnrichmentInput, candidates: Wine[]): Wine[] {
