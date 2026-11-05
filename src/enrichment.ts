@@ -5,7 +5,7 @@ import type { AlgoliaWineProfile, Wine } from './types.ts';
 /** Wine category as printed on a restaurant menu; absent means no category restriction. */
 export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'dessert' | 'fortified';
 const WINE_TYPE_IDS: Record<WineType, number> = {
-  red: 1, white: 2, sparkling: 3, rose: 4, dessert: 5, fortified: 6,
+  red: 1, white: 2, sparkling: 3, rose: 4, dessert: 7, fortified: 24,
 };
 export type WineEnrichmentInput = { name: string; year?: number; type?: WineType };
 export type CompactWineMatch = {
