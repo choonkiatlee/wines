@@ -1,0 +1,22 @@
+name: Validate Sainsbury's catalogue snapshot
+on:
+  push:
+    branches: [catalog/sainsburys-wines-2026-11-06]
+    paths:
+      - .github/workflows/sainsburys-catalog-validate.yml
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Check catalogue tests
+        run: node --test test/sainsburys-catalog.test.mjs
+      - name: Browse page 1 and page 4
+        run: |
+          node scripts/page-sainsburys-catalog.mjs --page 1 --page-size 20
+          node scripts/page-sainsburys-catalog.mjs --page 4 --page-size 20 --json
