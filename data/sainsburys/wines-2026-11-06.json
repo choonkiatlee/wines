@@ -1,0 +1,421 @@
+{
+  "schemaVersion": 1,
+  "retailer": "Sainsbury's",
+  "catalogue": "Wine",
+  "sourceCategoryUrl": "https://www.sainsburys.co.uk/groceries/browse/beer-wine-and-spirits/wine/c:1019462",
+  "assembledOn": "2026-11-06",
+  "completeness": "partial",
+  "captureMethod": "Names transcribed from public category-page extracts and indexed product listings; not an exhaustive or live inventory scrape",
+  "notes": [
+    "Source category results include listings crawled in October-November 2026; individual availability is not verified on the assembled date.",
+    "Category-level extracts cannot supply reliable retailer product IDs; do not infer them from names.",
+    "No Vivino enrichment or identity verification has been performed for this catalogue snapshot.",
+    "Wine type is inferred from product title, not verified against a label or Vivino.",
+    "Product prices and promotions are deliberately omitted; they are time- and store-dependent."
+  ],
+  "count": 67,
+  "products": [
+    {
+      "name": "La Vieille Ferme Rose Wine 75cl",
+      "type": "rose",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Oyster Bay Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Trivento Malbec Reserve Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Mud House New Zealand Marlborough Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Canti Prosecco 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Conegliano Prosecco, Taste the Difference 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Pinot Grigio Dolomiti Blush Rose Wine, Taste the Difference 75cl",
+      "type": "rose",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Mondelli Pinot Grigio White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Yellow Tail Shiraz Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Pinot Grigio White Wine, Taste the Difference 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Prosecco, Taste the Difference 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Jam Shed Shiraz Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Veuve Clicquot Yellow Label Brut Champagne 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Bollinger Special Cuvee, Non Vintage Champagne 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "La Vieille Ferme Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "La Vieille Ferme White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Portuguese Lisboa Red Wine, Taste the Difference 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Malbec Red Wine, Taste the Difference 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Montepulciano D'abruzzo Red Wine, Taste the Difference 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Sainsbury's Cava Brut 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Yellow Tail Chardonnay White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Barefoot Merlot Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Villa Maria Private Bin Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Brancott Estate Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "McGuigan Black Label Merlot Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Moët & Chandon Brut Imperial Champagne 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Newlands Point Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Yellow Tail Pinot Grigio White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Bollinger Rose Champagne 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Baron De Guers Picpoul De Pinet White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Dada Art 391 Malbec Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "Gallo Family White Zinfandel Rosé Wine 75cl",
+      "type": "rose",
+      "volumeMl": 750,
+      "provenance": "category_page"
+    },
+    {
+      "name": "McGuigan Black Label Pinot Grigio White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Clearsprings Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Porta 6 Vinho Regional Lisboa Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Colle Lauro Prosecco 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Pinot Grigio White Boxed Wine 225cl",
+      "type": "white",
+      "volumeMl": 2250,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Pinot Grigio White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Edizione 789 Prosecco 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Edizione 789 di Mondelli Famoso Pinot Grigio Rubicone Indicazione Geografica Tipica 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's Primitivo Red Wine, Taste the Difference 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Wollemi Merlot Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Phantom River Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Sauvignon Blanc White Boxed Wine 225cl",
+      "type": "white",
+      "volumeMl": 2250,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Pinot Grigio White Wine (Small bottle) 18.7cl",
+      "type": "white",
+      "volumeMl": 187,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "The Ned Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "McGuigan Estate Merlot 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Wollemi Chardonnay White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Barefoot Malbec Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Casillero Del Diablo Merlot Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's Crémant De Loire White Wine, Taste the Difference 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's Sauvignon Blanc White Wine, Taste the Difference 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Oxford Landing Sauvignon Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's Gavi White Wine, Taste the Difference 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Pinot Noir Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's Côtes du Rhône Villages Red Wine, Taste the Difference 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Cabernet Sauvignon Red Boxed Wine 225cl",
+      "type": "red",
+      "volumeMl": 2250,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Barefoot Buttery Chardonnay White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Penguin Sands Chenin Blanc White Wine 75cl",
+      "type": "white",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's Prosecco DOC Rose Brut Millesimato, Taste the Difference 75cl",
+      "type": "sparkling",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Barefoot White Zinfandel Rose Wine 75cl",
+      "type": "rose",
+      "volumeMl": 750,
+      "provenance": "indexed_category"
+    },
+    {
+      "name": "Sainsbury's House Cabernet Sauvignon Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "product_page"
+    },
+    {
+      "name": "McGuigan Reserve Cabernet Sauvignon Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "product_page"
+    },
+    {
+      "name": "Sainsbury's Maipo Cabernet Sauvignon Red Wine, Taste the Difference 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "product_page"
+    },
+    {
+      "name": "Barossa Ink Cabernet Sauvignon Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "product_page"
+    },
+    {
+      "name": "Caminada Cabernet Sauvignon Red Wine 75cl",
+      "type": "red",
+      "volumeMl": 750,
+      "provenance": "product_page"
+    }
+  ]
+}
