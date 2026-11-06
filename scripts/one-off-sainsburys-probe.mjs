@@ -33,7 +33,7 @@ const products = [
   { product: 'McGuigan Black Label Merlot Red Wine 75cl', type: 'red' },
 ];
 const inputs = products.map(p => ({
-  name: p.product.replace(/\\s*75cl$/i, '').trim(), type: p.type,
+  name: p.product.replace(/\s*75cl$/i, '').trim(), type: p.type,
 }));
 const startedAt = new Date().toISOString();
 const results = await enrichWines(inputs, { concurrency: 4 });
