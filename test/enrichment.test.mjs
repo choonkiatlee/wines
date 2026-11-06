@@ -55,7 +55,7 @@ test('ranks plausible candidates by producer/cuvee, rejects unrelated hits and d
   assert.equal(result[0].matches[1].rating.scope, 'overall');
   assert.deepEqual(calls.exact, [[1, 2022]]);
   assert.deepEqual(calls.overall, [2]);
-  assert.ok(calls.search.length <= 3);
+  assert.ok(calls.search.length <= 4);
 });
 
 test('preserves row ordering and returns empty matches for genuine no-hit searches', async () => {

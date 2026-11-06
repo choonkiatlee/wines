@@ -46,14 +46,19 @@ function significant(value: string): string[] {
 function searchQueries(name: string): string[] {
   const original = name.trim().replace(/\s+/g, ' ');
   const folded = tokens(original).join(' ');
-  const short = significant(original).slice(0, 3).join(' ');
+  const words = significant(original);
+  const short = words.slice(0, 3).join(' ');
+  // Long bottle labels sometimes put promotional text between the producer and
+  // grape/cuvee. A first+last query can recover the underlying wine without
+  // permanently removing possible real cuvee words such as "After Dark".
+  const edges = words.length >= 4 ? words[0] + ' ' + words.at(-1) : '';
   const seen = new Set<string>();
-  return [original, folded, short].filter(query => {
+  return [original, folded, edges, short].filter(query => {
     const key = query.toLowerCase();
     if (!query || seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).slice(0, 3);
+  }).slice(0, 4);
 }
 
 /** One insertion/deletion/substitution or adjacent transposition for reasonably long tokens. */
@@ -100,11 +105,16 @@ function overlap(query: string[], candidate: string[]): number {
 function cuveeTokens(query: string[], winery: string[]): string[] {
   if (!winery.length) return [];
   let producerEnd = -1;
+  let producerStart = -1;
   for (let i = 0; i < query.length; i++) {
-    if (winery.some(word => similar(query[i], word))) producerEnd = i;
-    else if (producerEnd >= 0) break;
+    if (winery.some(word => similar(query[i], word))) {
+      if (producerStart < 0) producerStart = i;
+      producerEnd = i;
+    } else if (producerEnd >= 0) break;
   }
-  if (producerEnd < 0) return [];
+  // Winery matches deep inside the label are often accidental word overlap
+  // (e.g. "Dark" in "Tall Dark Stranger" after "The Wanderer After Dark").
+  if (producerEnd < 0 || producerStart > 1) return [];
   return query.slice(producerEnd + 1).filter(word => !winery.some(producer => similar(word, producer)));
 }
 function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
@@ -122,6 +132,11 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
     indexedType !== WINE_TYPE_IDS[input.type]) return null;
   const nameHits = overlap(query, name);
   const wineryHits = overlap(query, winery);
+  // The producer normally starts the label. Do not treat a stray word like
+  // "Dark" in a different producer's name as equivalent producer evidence.
+  // The second slot accommodates an optional leading alias (Oszkar Maurer).
+  const producerAnchor = winery.some(word => similar(query[0], word)) ? 45
+    : winery.some(word => similar(query[1] ?? '', word)) ? 25 : 0;
   const relevantHits = overlap(query, [...name, ...winery]);
   const hits = overlap(query, [...name, ...winery, ...region]);
   const threshold = Math.max(1, Math.ceil(query.length * 0.5));
@@ -129,7 +144,12 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const cuveeHits = overlap(cuvee, [...name, ...region]);
   // A producer-only result for a named cuvee is worse than no candidate.
   // Partial cuvee agreement is allowed, so variants and nearby cuvees can still appear.
-  if (relevantHits < 1 || hits < threshold || (cuvee.length > 0 && cuveeHits === 0)) return null;
+  // A long label may contain more packaging terms than wine-identity terms.
+  // Relax the global coverage threshold only with independent evidence of an
+  // early producer and a matching wine name; cuvee validation still applies.
+  const anchoredCore = query.length >= 5 && producerAnchor > 0 && nameHits > 0;
+  if (relevantHits < 1 || (hits < threshold && !anchoredCore) ||
+    (cuvee.length > 0 && cuveeHits === 0)) return null;
   const exactName = tokens(wine.name).join(' ') === tokens(input.name).join(' ');
   const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ')).join(' ') === tokens(input.name).join(' ');
   const vintageAvailable = input.year !== undefined && wine.vintages?.some(v => Number(v.year) === input.year);
@@ -139,8 +159,16 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
     6 * wineryHits / query.length + (exactName || exactFull ? 20 : 0) +
     (cuvee.length ? 45 * cuveeHits / cuvee.length +
       (cuveeHits === cuvee.length ? 12 : 0) - 10 * (cuvee.length - cuveeHits) : 0) +
-    (vintageAvailable ? 3 : 0) + typeBonus - 3 * extraNameTokens -
+    (vintageAvailable ? 3 : 0) + typeBonus + producerAnchor - 3 * extraNameTokens -
     Math.max(0, name.length + winery.length - query.length) * 0.3;
+}
+function hasStrongLabelAnchor(input: WineEnrichmentInput, candidates: Wine[]): boolean {
+  const query = significant(input.name);
+  if (query.length < 4) return true;
+  const first = query.slice(0, 2);
+  const last = query.at(-1)!;
+  return candidates.some(wine => overlap(first, significant(wine.winery?.name ?? '')) > 0 &&
+    overlap([last], significant(wine.name)) > 0);
 }
 function rank(input: WineEnrichmentInput, candidates: Wine[]): Wine[] {
   return candidates.map((wine, index) => ({ wine, index, score: relevance(input, wine) }))
@@ -246,7 +274,10 @@ export async function enrichWines(inputs: readonly WineEnrichmentInput[], option
       try {
         for (const candidate of await find(query)) if (!found.has(candidate.id)) found.set(candidate.id, candidate);
       } catch { failed = true; }
-      if (rank(input, [...found.values()]).length >= 3) break;
+      const ranked = rank(input, [...found.values()]);
+      // Three superficially plausible hits can still all belong to the wrong
+      // producer when promotional words dominate a longer label.
+      if (ranked.length >= 3 && hasStrongLabelAnchor(input, ranked)) break;
     }
     const top = rank(input, [...found.values()]).slice(0, 3);
     const profilesByRank = await Promise.all(top.map(candidate => getProfile(candidate, input.year).catch(() => {
