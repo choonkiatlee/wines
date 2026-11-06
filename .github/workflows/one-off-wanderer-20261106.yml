@@ -1,0 +1,41 @@
+name: One-off Wanderer Malbec Vivino fetch
+on:
+  push:
+    branches:
+      - one-off/wanderer-malbec-live-20261106
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Fetch live Vivino Algolia candidates and enriched profiles
+        shell: bash
+        run: |
+          node --experimental-strip-types --input-type=module <<'EOF'
+          import { VivinoAlgoliaClient, enrichWines } from './src/index.ts';
+          const vivino = new VivinoAlgoliaClient();
+          const searches = ['The Wanderer Malbec', 'The Wanderer After Dark Malbec', 'Wanderer'];
+          for (const query of searches) {
+            try {
+              const result = await vivino.searchWines(query, 15);
+              console.log('SEARCH_RESULT', JSON.stringify({ query, total: result.total, candidates: result.candidates.map(w => ({
+                id:w.id, name:w.name, winery:w.winery?.name ?? null, region:w.region?.name ?? null,
+                typeId:w.type_id ?? null, nonVintage:w.non_vintage ?? null
+              })).slice(0, 10) }));
+            } catch (error) { console.log('SEARCH_ERROR', JSON.stringify({ query, error: String(error) })); }
+          }
+          try {
+            const profile = await vivino.getProfile(10725356);
+            console.log('KNOWN_ID_PROFILE', JSON.stringify(profile));
+          } catch (error) { console.log('KNOWN_ID_ERROR', String(error)); }
+          for (const input of [{name:'The Wanderer Malbec', type:'red'}, {name:'The Wanderer After Dark Malbec', type:'red'}]) {
+            try {
+              const rows = await enrichWines([input], { returnAll: true });
+              console.log('ENRICH_RESULT', JSON.stringify({input, rows}));
+            } catch(error) { console.log('ENRICH_ERROR', JSON.stringify({input,error:String(error)})); }
+          }
+          EOF
