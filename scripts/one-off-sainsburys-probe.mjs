@@ -65,5 +65,44 @@ for (const [i, e] of entries.entries()) {
     alternativeNames: e.matches.slice(1).map(m => m.name),
   }));
 }
+
+function cleanedName(product) {
+  const original = product.replace(/\s*75cl$/i, '').trim();
+  // Drop shop packaging/category words, not producer or actual cuvée tokens.
+  if (/^La Vieille Ferme Red Wine$/i.test(original)) return 'La Vieille Ferme Rouge';
+  if (/^La Vieille Ferme White Wine$/i.test(original)) return 'La Vieille Ferme Blanc';
+  if (/^La Vieille Ferme Rose Wine$/i.test(original)) return 'La Vieille Ferme Rosé';
+  const ownLabel = /^Sainsbury's\b/i.test(original) && /,\s*Taste the Difference$/i.test(original);
+  let name = original.replace(/,\s*Taste the Difference$/i, '')
+    .replace(/\s+(?:Red|White|Rose)\s+Wine\b/gi, '')
+    .replace(/,\s*Non Vintage(?=\s+Champagne)/i, '')
+    .replace(/\s+/g, ' ').trim();
+  if (ownLabel) name = name.replace(/^Sainsbury's\s*/i, "Sainsbury's Taste the Difference ");
+  return name;
+}
+const cleanedInputs = products.map(p => ({ name: cleanedName(p.product), type: p.type }));
+const normalized = await enrichWines(cleanedInputs, { concurrency: 4 });
+const cleanedEntries = normalized.map((row, i) => ({
+  product: products[i].product, input: cleanedInputs[i], matches: row.matches,
+  ...(row.error ? { error: row.error } : {}),
+}));
+output.cleanedEntries = cleanedEntries;
+const cleanedSummary = {
+  total: normalized.length,
+  withCandidates: normalized.filter(r => r.matches.length).length,
+  withUpstreamErrors: normalized.filter(r => r.error).length,
+  changedTop: normalized.filter((r, i) => r.matches[0]?.url !== results[i].matches[0]?.url).length,
+};
+output.cleanedSummary = cleanedSummary;
+await writeFile('sainsburys-vivino-2026-11-06.json', JSON.stringify(output, null, 2));
+console.log('CLEANED_SUMMARY', JSON.stringify(cleanedSummary));
+for (const [i, e] of cleanedEntries.entries()) {
+  console.log('CLEANED_ROW', JSON.stringify({
+    i: i + 1, product: e.product, query: e.input.name, error: e.error ?? null,
+    candidates: e.matches.map(m => ({ name: m.name, rating: m.rating, url: m.url })),
+  }));
+}
+if (cleanedSummary.withUpstreamErrors > 0) process.exitCode = 1;
+
 // A network outage should fail the check; genuine no-match rows should not.
 if (summary.withUpstreamErrors > 0) process.exitCode = 1;
