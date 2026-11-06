@@ -105,11 +105,16 @@ function overlap(query: string[], candidate: string[]): number {
 function cuveeTokens(query: string[], winery: string[]): string[] {
   if (!winery.length) return [];
   let producerEnd = -1;
+  let producerStart = -1;
   for (let i = 0; i < query.length; i++) {
-    if (winery.some(word => similar(query[i], word))) producerEnd = i;
-    else if (producerEnd >= 0) break;
+    if (winery.some(word => similar(query[i], word))) {
+      if (producerStart < 0) producerStart = i;
+      producerEnd = i;
+    } else if (producerEnd >= 0) break;
   }
-  if (producerEnd < 0) return [];
+  // Winery matches deep inside the label are often accidental word overlap
+  // (e.g. "Dark" in "Tall Dark Stranger" after "The Wanderer After Dark").
+  if (producerEnd < 0 || producerStart > 1) return [];
   return query.slice(producerEnd + 1).filter(word => !winery.some(producer => similar(word, producer)));
 }
 function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
