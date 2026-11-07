@@ -235,3 +235,9 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
   .toolbar-field { flex: 1 1 136px; }
   .toolbar-field select { width: 100%; min-width: 0; }
 }
+
+.menu-price { display: block; margin: 7px 0 2px; color: var(--red); font-size: .91rem;
+  font-weight: 750; line-height: 1.3; }
+.menu-details { margin-top: 26px; padding: 21px 0 4px; border-top: 1px solid #eeece7; }
+.menu-details .metadata-grid { margin-top: 14px; }
+.menu-details .meta-item:first-child dd { color: var(--red); font-weight: 750; }

@@ -7,7 +7,14 @@ export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'dessert' | 'for
 const WINE_TYPE_IDS: Record<WineType, number> = {
   red: 1, white: 2, sparkling: 3, rose: 4, dessert: 7, fortified: 24,
 };
-export type WineEnrichmentInput = { name: string; year?: number; type?: WineType };
+/** Optional restaurant-menu context, ignored by wine matching and kept with input rows. */
+export type WineMenuMetadata = Record<string, string | number | boolean | null>;
+export type WineEnrichmentInput = {
+  name: string;
+  year?: number;
+  type?: WineType;
+  metadata?: WineMenuMetadata;
+};
 export type CompactWineMatch = {
   name: string;
   year: number | null;

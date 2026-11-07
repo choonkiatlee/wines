@@ -18,13 +18,14 @@
       <details id="input-details" open>
         <summary><span class="summary-text">Wine list <span class="summary-subtext">JSON input</span></span><span class="summary-edit">Edit list <span aria-hidden="true">⌄</span></span></summary>
         <form id="enrich-form">
-          <label for="wines-input">Paste an array of wine names with optional year and type.</label>
+          <label for="wines-input">Paste an array of up to 60 wines with optional vintage, type and metadata (e.g. menuPrice).</label>
           <textarea id="wines-input" spellcheck="false" rows="7">[
   { "name": "Opus One", "year": 2022, "type": "red" },
-  { "name": "G.D. Vajra Barbera d'Alba" }
+  { "name": "G.D. Vajra Barbera d'Alba", "metadata": { "menuPrice": "£58" } }
 ]</textarea>
           <div class="form-actions">
             <button type="submit" id="enrich-button" class="button button-primary">Find matches <span aria-hidden="true">↗</span></button>
+            <button type="button" id="share-button" class="button button-quiet">Copy share link</button>
             <button type="button" id="connection-button" class="button button-quiet">Test connection</button>
           </div>
         </form>
@@ -57,7 +58,7 @@
         <label class="toolbar-field" for="sort-by"><span>Sort by</span>
           <select id="sort-by" disabled>
             <option value="original">Original order</option>
-            <option value="rating-desc">Rating: highest first</option>
+            <option value="rating-desc" selected>Rating: highest first</option>
             <option value="rating-asc">Rating: lowest first</option>
             <option value="type">Type: A–Z</option>
           </select>

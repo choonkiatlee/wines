@@ -7,6 +7,7 @@ import {
 import type { FullWineRow, Selection } from './selection.ts';
 import { visibleRows, wineTypeFor, WINE_TYPE_LABELS } from './table-view.ts';
 import type { TypeFilter, SortKey } from './table-view.ts';
+import { createShareLink, menuPrice, parseWineInputs, readWineLink } from './deep-link.ts';
 import './style.css';
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -26,6 +27,7 @@ const sortBy = byId<HTMLSelectElement>('sort-by');
 const resetTable = byId<HTMLButtonElement>('reset-table');
 const enrichButton = byId<HTMLButtonElement>('enrich-button');
 const connectionButton = byId<HTMLButtonElement>('connection-button');
+const shareButton = byId<HTMLButtonElement>('share-button');
 const dialog = byId<HTMLDialogElement>('wine-dialog');
 const dialogTitle = byId<HTMLElement>('dialog-title');
 const dialogSubtitle = byId<HTMLElement>('dialog-subtitle');
@@ -38,38 +40,17 @@ let choices: Selection[] = [];
 let activeRow: number | null = null;
 let lastRowIndex: number | null = null;
 let currentTypeFilter: TypeFilter = 'all';
-let currentSort: SortKey = 'original';
+let currentSort: SortKey = 'rating-desc';
 
 function setBusy(busy: boolean): void {
   enrichButton.disabled = busy;
   connectionButton.disabled = busy;
+  shareButton.disabled = busy;
   form.setAttribute('aria-busy', String(busy));
 }
 
 function parseInputs(): WineEnrichmentInput[] {
-  const parsed: unknown = JSON.parse(input.value);
-  if (!Array.isArray(parsed) || !parsed.length) {
-    throw new Error('Provide a non-empty JSON array of wines.');
-  }
-  if (parsed.length > 30) throw new Error('Please test no more than 30 wines per batch.');
-  for (const item of parsed) {
-    if (typeof item !== 'object' || item === null || Array.isArray(item)) {
-      throw new Error('Each wine must be an object.');
-    }
-    const row = item as Record<string, unknown>;
-    if (typeof row.name !== 'string' || !row.name.trim()) {
-      throw new Error('Every item needs a non-empty name string.');
-    }
-    if (row.year !== undefined &&
-        (!Number.isInteger(row.year) || (row.year as number) < 1800 || (row.year as number) > 2100)) {
-      throw new Error('Years must be valid four-digit vintages.');
-    }
-    if (row.type !== undefined &&
-        !['red', 'white', 'rose', 'sparkling', 'dessert', 'fortified'].includes(String(row.type))) {
-      throw new Error('Unknown wine type.');
-    }
-  }
-  return parsed as WineEnrichmentInput[];
+  return parseWineInputs(input.value);
 }
 
 function element<K extends keyof HTMLElementTagNameMap>(
@@ -147,7 +128,7 @@ function renderTable(): void {
   const shown = visibleRows(inputs, rows, choices, currentTypeFilter, currentSort);
   resultsCount.textContent = 'Showing ' + shown.length + ' of ' + summary.total +
     (summary.chosen ? ' · ' + summary.chosen + ' reviewed' : '');
-  resetTable.hidden = currentTypeFilter === 'all' && currentSort === 'original';
+  resetTable.hidden = currentTypeFilter === 'all' && currentSort === 'rating-desc';
 
   if (!shown.length) {
     const empty = element('tr');
@@ -168,6 +149,8 @@ function renderTable(): void {
     menuCell.append(element('strong', 'menu-name', inputs[i].name));
     const inputMeta = inputs[i].year ? String(inputs[i].year) : '';
     if (inputMeta) menuCell.append(element('span', 'menu-subline', inputMeta));
+    const price = menuPrice(inputs[i]);
+    if (price !== null) menuCell.append(element('span', 'menu-price', price + ' · Menu'));
     const kind = wineTypeFor(inputs[i], row, chosen);
     menuCell.append(element('span', 'wine-type-tag type-' + kind,
       kind === 'unknown' ? 'Type unknown' : WINE_TYPE_LABELS[kind]));
@@ -304,6 +287,20 @@ function renderDetail(): void {
     dialogContent.append(empty);
   }
 
+  const sourceMeta = inputs[activeRow].metadata;
+  if (sourceMeta && Object.keys(sourceMeta).length) {
+    const menuDetails = element('section', 'menu-details');
+    menuDetails.append(element('h3', 'detail-subheading', 'From the restaurant menu'));
+    const details = element('dl', 'metadata-grid');
+    for (const [key, value] of Object.entries(sourceMeta)) {
+      const label = key === 'menuPrice' ? 'Menu price' :
+        key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ');
+      addMetadata(details, label.charAt(0).toUpperCase() + label.slice(1), value);
+    }
+    menuDetails.append(details);
+    dialogContent.append(menuDetails);
+  }
+
   const section = element('section', 'choices-section');
   const title = element('div', 'choices-heading');
   title.append(element('h3', '', 'Choose a match'));
@@ -394,9 +391,9 @@ form.addEventListener('submit', async event => {
     rows = pendingRows;
     choices = initialSelections(rows);
     currentTypeFilter = 'all';
-    currentSort = 'original';
+    currentSort = 'rating-desc';
     typeFilter.value = 'all';
-    sortBy.value = 'original';
+    sortBy.value = 'rating-desc';
     typeFilter.disabled = false;
     sortBy.disabled = false;
     renderTable();
@@ -440,9 +437,45 @@ sortBy.addEventListener('change', () => {
 
 resetTable.addEventListener('click', () => {
   currentTypeFilter = 'all';
-  currentSort = 'original';
+  currentSort = 'rating-desc';
   typeFilter.value = 'all';
-  sortBy.value = 'original';
+  sortBy.value = 'rating-desc';
   renderTable();
   typeFilter.focus();
 });
+
+shareButton.addEventListener('click', async () => {
+  try {
+    const wines = parseInputs();
+    const { url, compressed } = await createShareLink(window.location.href, wines, true);
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      status.textContent = 'Share link copied (' + wines.length + ' wines, ' +
+        url.length + ' characters' + (compressed ? ', compressed' : '') +
+        '). Opening it automatically enriches the list.';
+    } else {
+      window.prompt('Copy this link:', url);
+      status.textContent = 'Generated a shareable link for ' + wines.length + ' wines.';
+    }
+  } catch (error) {
+    status.textContent = 'Unable to create share link: ' +
+      (error instanceof Error ? error.message : String(error));
+  }
+});
+
+// Import on initial load only: no network call unless the URL explicitly opts into autorun.
+void (async () => {
+  try {
+    const imported = await readWineLink(window.location.hash);
+    if (!imported) return;
+    input.value = JSON.stringify(imported.wines, null, 2);
+    status.textContent = 'Imported ' + imported.wines.length +
+      ' wines from your link' + (imported.autorun ? '; searching now…' : '. Review the list and find matches.') ;
+    if (imported.autorun) form.requestSubmit();
+  } catch (error) {
+    status.textContent = 'Invalid wine link: ' +
+      (error instanceof Error ? error.message : String(error)) +
+      '. No automatic search was started.';
+    inputDetails.open = true;
+  }
+})();
