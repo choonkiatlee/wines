@@ -26,8 +26,6 @@ const resultsCount = byId<HTMLElement>('results-count');
 const typeFilter = byId<HTMLSelectElement>('type-filter');
 const sortBy = byId<HTMLSelectElement>('sort-by');
 const resetTable = byId<HTMLButtonElement>('reset-table');
-const showNotesInput = byId<HTMLInputElement>('show-notes');
-const notesHeader = byId<HTMLTableCellElement>('notes-header');
 const enrichButton = byId<HTMLButtonElement>('enrich-button');
 const connectionButton = byId<HTMLButtonElement>('connection-button');
 const shareButton = byId<HTMLButtonElement>('share-button');
@@ -44,7 +42,6 @@ let activeRow: number | null = null;
 let lastRowIndex: number | null = null;
 let currentTypeFilter: TypeFilter = 'all';
 let currentSort: SortKey = 'rating-desc';
-let showNotes = false;
 
 function setBusy(busy: boolean): void {
   enrichButton.disabled = busy;
@@ -128,7 +125,6 @@ function appendCell(row: HTMLTableRowElement, className = ''): HTMLTableCellElem
 
 function renderTable(): void {
   resultsBody.replaceChildren();
-  notesHeader.hidden = !showNotes;
   const summary = selectionSummary(rows, choices);
   const shown = visibleRows(inputs, rows, choices, currentTypeFilter, currentSort);
   resultsCount.textContent = 'Showing ' + shown.length + ' of ' + summary.total +
@@ -138,7 +134,7 @@ function renderTable(): void {
   if (!shown.length) {
     const empty = element('tr');
     const td = appendCell(empty, 'empty');
-    td.colSpan = showNotes ? 5 : 4;
+    td.colSpan = 5;
     td.append(element('strong', '', 'No wines match this filter'));
     td.append(element('span', '', 'Try another type or clear the filters.'));
     resultsBody.append(empty);
@@ -190,17 +186,16 @@ function renderTable(): void {
     matchCell.append(button);
     const ratingCell = appendCell(tr, 'rating-cell');
     compactRating(ratingCell, profile);
-    if (showNotes) {
-      const noteCell = appendCell(tr, 'notes-cell');
-      const tasting = profile?.derived.tastingNotes;
-      const excerpt = shortWineNote(tasting ?? profile?.description?.text);
-      if (excerpt) {
-        noteCell.append(element('span', 'notes-excerpt', excerpt));
-        noteCell.append(element('span', 'notes-kind',
-          tasting ? 'Tasting note · source excerpt' : 'General description · source excerpt'));
-      } else {
-        noteCell.append(element('span', 'muted', 'No description available'));
-      }
+    const noteCell = appendCell(tr, 'notes-cell');
+    const tasting = profile?.derived.tastingNotes;
+    const excerpt = shortWineNote(tasting ?? profile?.description?.text);
+    if (excerpt) {
+      noteCell.append(element('span', 'notes-excerpt', excerpt));
+      noteCell.append(element('span', 'notes-kind',
+        tasting ? 'Tasting note · source excerpt' : 'General description · source excerpt'));
+    } else {
+      noteCell.append(element('span', 'muted',
+        profile ? 'No description available' : 'No wine matched'));
     }
     const actionCell = appendCell(tr, 'action-cell');
     actionCell.append(element('span', 'row-arrow', '›'));
@@ -507,8 +502,3 @@ void (async () => {
   }
 })();
 
-showNotesInput.addEventListener('change', () => {
-  showNotes = showNotesInput.checked;
-  if (rows.length) renderTable();
-  else notesHeader.hidden = !showNotes;
-});

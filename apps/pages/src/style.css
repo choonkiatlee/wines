@@ -176,25 +176,51 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
   h2 { font-size: 1.7rem; }
   .results-heading { align-items: flex-start; }
   .count-pill { font-size: .73rem; padding: 7px 10px; margin-top: 8px; }
-  .wine-table th { padding: 12px 11px; }
-  .wine-table td { padding: 12px 11px; }
-  .menu-cell { min-width: 120px; }
-  .menu-name, .match-name { font-size: .82rem; }
-  .match-cell { min-width: 160px; }
-  .table-bottle, .unmatched-icon { flex-basis: 33px; width: 33px; height: 48px; }
-  .match-button { gap: 7px; }
-  .rating-cell { min-width: 88px; }
-  .rating-caption { white-space: normal; font-size: .69rem; }
-  .action-cell { width: 18px; }
-  .wine-dialog { width: 100%; max-width: none; max-height: min(94dvh, 1000px);
-    margin: auto 0 0; border-radius: 17px 17px 0 0; }
-  .dialog-wrap { max-height: min(94dvh,1000px); }
-  .dialog-head { padding: 20px 19px 16px; }
+  /* Present one wine per card, avoiding sideways scrolling of a five-column table. */
+  .table-frame { background: transparent; border: 0; overflow: visible; }
+  .wine-table, .wine-table tbody { display: block; width: 100%; }
+  .wine-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; }
+  .wine-table tbody > tr.wine-row {
+    display: grid; width: 100%; margin: 0 0 12px;
+    grid-template-areas: "menu rating" "match match" "notes notes";
+    grid-template-columns: minmax(0,1fr) max-content;
+    border: 1px solid var(--line); background: #fff; border-radius: 13px;
+    overflow: hidden; column-gap: 12px;
+  }
+  .wine-table .wine-row td { display: block; border: 0; min-width: 0; max-width: none; width: auto; }
+  .wine-row .menu-cell { grid-area: menu; padding: 16px 0 8px 16px; }
+  .wine-row .rating-cell { grid-area: rating; padding: 16px 16px 8px 0; text-align: right; }
+  .wine-row .match-cell { grid-area: match; padding: 11px 16px; }
+  .wine-row .notes-cell { grid-area: notes; padding: 11px 16px 16px;
+    border-top: 1px solid #f1eee9; }
+  .wine-row .action-cell { display: none; }
+  .wine-table tbody > tr:not(.wine-row) { display: block; background: #fff;
+    border: 1px solid var(--line); border-radius: 13px; }
+  .wine-table tbody > tr:not(.wine-row) td { display: block; width: 100%; }
+  .menu-name { font-size: .95rem; overflow-wrap: anywhere; }
+  .match-name { font-size: .88rem; }
+  .menu-price { margin: 5px 0; }
+  .table-bottle, .unmatched-icon { flex-basis: 43px; width: 43px; height: 58px; }
+  .match-button { gap: 11px; min-height: 58px; }
+  .rating-cell .table-rating { justify-content: flex-end; }
+  .rating-caption { white-space: normal; font-size: .68rem; max-width: 130px; }
+  .notes-cell .notes-excerpt { -webkit-line-clamp: 3; }
+  /* The same accessible native dialog fills the device rather than opening a bottom sheet. */
+  .wine-dialog { position: fixed; inset: 0; margin: 0; width: 100vw; max-width: 100vw;
+    height: 100dvh; max-height: 100dvh; border-radius: 0; }
+  .dialog-wrap { height: 100%; max-height: none; overflow-y: auto;
+    overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .dialog-head { padding: calc(16px + env(safe-area-inset-top)) 16px 14px; }
+  .dialog-head > div { min-width: 0; }
+  .dialog-head h2 { overflow-wrap: anywhere; }
+  .icon-button { flex-basis: 44px; width: 44px; height: 44px; }
+
   .dialog-head h2 { font-size: 1.3rem; }
-  .dialog-content { padding: 20px 19px 28px; }
+  .dialog-content { padding: 20px 16px calc(32px + env(safe-area-inset-bottom)); }
   .detail-hero { grid-template-columns: 100px minmax(0,1fr); gap: 16px; }
   .hero-image { height: 161px; padding: 8px; }
-  .hero-name { font-size: 1.4rem; }
+  .hero-name { font-size: 1.4rem; overflow-wrap: anywhere; }
   .hero-rating { margin-top: 13px; }
   .hero-score { font-size: 1.7rem; }
   .hero-rating-description { font-size: .76rem; }
@@ -204,8 +230,6 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
   .option-none { grid-column: 1; }
 }
 @media (max-width: 380px) {
-  .rating-cell { display: none; }
-  .wine-table th:nth-child(3) { display: none; }
   .results-heading { gap: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { transition: none !important; } }
@@ -242,19 +266,12 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
 .menu-details .metadata-grid { margin-top: 14px; }
 .menu-details .meta-item:first-child dd { color: var(--red); font-weight: 750; }
 
-/* Optional short source-description excerpts keep the default shortlist compact. */
-.notes-toggle { display: inline-flex; align-items: center; gap: 9px; margin: 0;
-  font-size: .83rem; font-weight: 650; color: #615c55; cursor: pointer; padding: 9px 3px; }
-.notes-toggle input { width: 16px; height: 16px; margin: 0; accent-color: var(--red); cursor: pointer; }
-.wine-table th[hidden] { display: none; }
-.notes-cell { min-width: 230px; width: 31%; max-width: 380px; }
+/* Source-faithful tasting notes are always visible in desktop rows and mobile cards. */
+.notes-cell { min-width: 190px; width: 31%; max-width: 380px; }
 .notes-excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
   overflow: hidden; color: #68635d; font-size: .83rem; line-height: 1.45; }
 .description { white-space: pre-line; overflow-wrap: anywhere; }
-@media (max-width: 760px) {
-  .notes-toggle { flex: 1 1 100%; }
-  .notes-cell { min-width: 215px; }
-}
+
 
 .notes-kind { display: block; margin-top: 7px; color: #999087; font-size: .7rem; line-height: 1.35; }
 .derived-notes { color: #55443d; font-size: .93rem; line-height: 1.65; white-space: pre-line;

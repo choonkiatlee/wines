@@ -151,12 +151,14 @@ The website remains static and calls `enrichWines()` in the browser; the Vivino 
 
 ### Optional short descriptions in Pages
 
-The shortlist stays compact by default. A **Show short wine notes** checkbox adds
-a column with an up-to-132-character, word-boundary excerpt from Vivino's
-`description.text` for the currently selected candidate. These are source
-excerpts, not invented tasting profiles. Missing descriptions remain visibly
-unavailable. Opening a wine's detail card always shows the **complete source
-description** (or an explicit unavailable message), without truncation.
+The shortlist always shows a tasting-notes column (no toggle),
+using a short excerpt of the selected candidate's derived tasting notes.
+If there are no detected tasting notes, it falls back to a labelled excerpt
+of Vivino's general description; unavailable descriptions are explicit.
+The detail view shows both the selected derived notes and the **complete source
+description**, without truncation. On narrow screens, the results become
+vertically stacked, single-column wine cards with no horizontal scrolling,
+and the detail view is a full-screen, keyboard-accessible native dialog.
 Changing candidate updates its row's note. No changes to the standalone
 Vivino client, matching algorithm, or compact API response.
 
