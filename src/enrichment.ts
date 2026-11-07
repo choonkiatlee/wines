@@ -1,5 +1,5 @@
 /** Candidate retrieval and enrichment, not automatic wine identification. */
-import { VivinoAlgoliaClient } from './algolia-client.ts';
+import { VivinoAlgoliaClient } from '../packages/vivino-client/src/algolia-client.ts';
 import type { AlgoliaWineProfile, Wine } from './types.ts';
 
 /** Wine category as printed on a restaurant menu; absent means no category restriction. */

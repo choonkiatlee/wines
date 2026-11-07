@@ -1,0 +1,13 @@
+{
+  "name": "@choonkiatlee/vivino-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone TypeScript Vivino Algolia and experimental website client",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=22.16"
+  }
+}
