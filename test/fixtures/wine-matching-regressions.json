@@ -1,0 +1,678 @@
+{
+  "schemaVersion": 1,
+  "description": "Curated wine identity regressions. Only verified cases are hard assertions; pending examples have provisional expectations.",
+  "cases": [
+    {
+      "verified": true,
+      "id": "veuve-yellow-label",
+      "input": {
+        "name": "Veuve Clicquot Yellow Label Brut Champagne",
+        "type": "sparkling"
+      },
+      "expected": {
+        "topId": 1128385,
+        "mustIncludeIds": [
+          1128385
+        ],
+        "mustExcludeIds": [
+          23051,
+          1141123
+        ]
+      },
+      "candidates": [
+        {
+          "id": 23051,
+          "name": "Brut Rosé Champagne",
+          "winery": "Veuve Clicquot",
+          "type_id": 3,
+          "region": "Champagne"
+        },
+        {
+          "id": 1141123,
+          "name": "Vintage Brut Champagne",
+          "winery": "Veuve Clicquot",
+          "type_id": 3,
+          "region": "Champagne"
+        },
+        {
+          "id": 1128385,
+          "name": "Brut (Carte Jaune) Champagne",
+          "winery": "Veuve Clicquot",
+          "type_id": 3,
+          "region": "Champagne"
+        }
+      ],
+      "searchResults": {
+        "Veuve Clicquot Brut Champagne": [
+          1128385,
+          23051,
+          1141123
+        ]
+      },
+      "defaultIds": [
+        23051,
+        1141123
+      ],
+      "reason": "Yellow Label corresponds to Carte Jaune; must search beyond other Veuve bottlings",
+      "source": "Vivino Algolia 2026-11-07; targeted search"
+    },
+    {
+      "verified": true,
+      "id": "barossa-ink-cabernet",
+      "input": {
+        "name": "Barossa Ink Cabernet Sauvignon",
+        "type": "red"
+      },
+      "expected": {
+        "topId": 5727069,
+        "mustIncludeIds": [
+          5727069
+        ],
+        "mustExcludeIds": [
+          2675720
+        ]
+      },
+      "candidates": [
+        {
+          "id": 2675720,
+          "name": "Cabernet Sauvignon",
+          "winery": "Barossa Valley Estate",
+          "type_id": 1,
+          "region": "Barossa Valley"
+        },
+        {
+          "id": 5727069,
+          "name": "Barossa Ink Cabernet Sauvignon",
+          "winery": "Grant Burge Wines",
+          "type_id": 1,
+          "region": "Barossa Valley"
+        },
+        {
+          "id": 11827610,
+          "name": "Midnight Ink Cabernet Sauvignon",
+          "winery": "Grant Burge Wines",
+          "type_id": 1,
+          "region": "Barossa Valley"
+        }
+      ],
+      "reason": "Distinctive Ink cuvée beats matching Barossa region of wrong producer",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "trivento-reserve-vs-golden",
+      "input": {
+        "name": "Trivento Malbec Reserve Red Wine 75cl",
+        "type": "red"
+      },
+      "expected": {
+        "topId": 1135980,
+        "mustIncludeIds": [
+          1135980
+        ]
+      },
+      "candidates": [
+        {
+          "id": 14372,
+          "name": "Golden Reserve Malbec",
+          "winery": "Trivento",
+          "type_id": 1,
+          "region": "Mendoza"
+        },
+        {
+          "id": 5609005,
+          "name": "Private Reserve Malbec",
+          "winery": "Trivento",
+          "type_id": 1,
+          "region": "Mendoza"
+        },
+        {
+          "id": 1135980,
+          "name": "Reserve Malbec",
+          "winery": "Trivento",
+          "type_id": 1,
+          "region": "Mendoza"
+        }
+      ],
+      "reason": "Reserve is not Golden Reserve or Private Reserve",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "la-vieille-ferme-rouge",
+      "input": {
+        "name": "La Vieille Ferme Red Wine 75cl",
+        "type": "red"
+      },
+      "expected": {
+        "topId": 10986,
+        "mustExcludeIds": [
+          10988,
+          10989
+        ]
+      },
+      "candidates": [
+        {
+          "id": 10989,
+          "name": "Rosé",
+          "winery": "La Vieille Ferme",
+          "type_id": 4,
+          "region": ""
+        },
+        {
+          "id": 10988,
+          "name": "Blanc",
+          "winery": "La Vieille Ferme",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 10986,
+          "name": "Rouge",
+          "winery": "La Vieille Ferme",
+          "type_id": 1,
+          "region": ""
+        }
+      ],
+      "reason": "Keep red/white/rosé variants separate",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "la-vieille-ferme-blanc",
+      "input": {
+        "name": "La Vieille Ferme White Wine 75cl",
+        "type": "white"
+      },
+      "expected": {
+        "topId": 10988,
+        "mustExcludeIds": [
+          10986,
+          10989
+        ]
+      },
+      "candidates": [
+        {
+          "id": 10986,
+          "name": "Rouge",
+          "winery": "La Vieille Ferme",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 10988,
+          "name": "Blanc",
+          "winery": "La Vieille Ferme",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 10989,
+          "name": "Rosé",
+          "winery": "La Vieille Ferme",
+          "type_id": 4,
+          "region": ""
+        }
+      ],
+      "reason": "Keep red/white/rosé variants separate",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "la-vieille-ferme-rose",
+      "input": {
+        "name": "La Vieille Ferme Rose Wine 75cl",
+        "type": "rose"
+      },
+      "expected": {
+        "topId": 10989,
+        "mustExcludeIds": [
+          10986,
+          10988
+        ]
+      },
+      "candidates": [
+        {
+          "id": 10986,
+          "name": "Rouge",
+          "winery": "La Vieille Ferme",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 10989,
+          "name": "Rosé",
+          "winery": "La Vieille Ferme",
+          "type_id": 4,
+          "region": ""
+        },
+        {
+          "id": 10988,
+          "name": "Blanc",
+          "winery": "La Vieille Ferme",
+          "type_id": 2,
+          "region": ""
+        }
+      ],
+      "reason": "Keep red/white/rosé variants separate",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "villa-maria-private-bin",
+      "input": {
+        "name": "Villa Maria Private Bin Sauvignon Blanc White Wine 75cl",
+        "type": "white"
+      },
+      "expected": {
+        "topId": 39034,
+        "mustIncludeIds": [
+          39034
+        ]
+      },
+      "candidates": [
+        {
+          "id": 2287955,
+          "name": "Private Bin Organic Sauvignon Blanc",
+          "winery": "Villa Maria",
+          "type_id": 2,
+          "region": "Marlborough"
+        },
+        {
+          "id": 39034,
+          "name": "Private Bin Sauvignon Blanc",
+          "winery": "Villa Maria",
+          "type_id": 2,
+          "region": "Marlborough"
+        },
+        {
+          "id": 3269196,
+          "name": "Private Bin Light Sauvignon Blanc",
+          "winery": "Villa Maria",
+          "type_id": 2,
+          "region": "Marlborough"
+        }
+      ],
+      "reason": "Control: do not confuse Private Bin with Organic or Light variants",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "oyster-bay",
+      "input": {
+        "name": "Oyster Bay Sauvignon Blanc White Wine 75cl",
+        "type": "white"
+      },
+      "expected": {
+        "topId": 9530
+      },
+      "candidates": [
+        {
+          "id": 6138230,
+          "name": "Sauvignon Blanc",
+          "winery": "Oyster Catcher",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 9530,
+          "name": "Sauvignon Blanc",
+          "winery": "Oyster Bay",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 6138233,
+          "name": "Sauvignon Blanc",
+          "winery": "Oyster Shack",
+          "type_id": 2,
+          "region": ""
+        }
+      ],
+      "reason": "Control: same grape, different winery",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "the-ned",
+      "input": {
+        "name": "The Ned Sauvignon Blanc White Wine 75cl",
+        "type": "white"
+      },
+      "expected": {
+        "topId": 1513069
+      },
+      "candidates": [
+        {
+          "id": 8039612,
+          "name": "Pinnacle Sauvignon Blanc",
+          "winery": "The Ned",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 1513069,
+          "name": "Sauvignon Blanc",
+          "winery": "The Ned",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 13690939,
+          "name": "Summit Sauvignon Blanc",
+          "winery": "The Ned",
+          "type_id": 2,
+          "region": ""
+        }
+      ],
+      "reason": "Control: exact everyday bottling beats premium editions",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "bollinger-special-cuvee",
+      "input": {
+        "name": "Bollinger Special Cuvee, Non Vintage Champagne 75cl",
+        "type": "sparkling"
+      },
+      "expected": {
+        "topId": 18929
+      },
+      "candidates": [
+        {
+          "id": 8835123,
+          "name": "Champagne Special Cuvée 007 Limited Edition",
+          "winery": "Bollinger",
+          "type_id": 3,
+          "region": "Champagne"
+        },
+        {
+          "id": 18929,
+          "name": "Special Cuvée Brut Aÿ Champagne",
+          "winery": "Bollinger",
+          "type_id": 3,
+          "region": "Champagne"
+        },
+        {
+          "id": 3577058,
+          "name": "Millennium Special Cuvée Brut Ay Champagne",
+          "winery": "Bollinger",
+          "type_id": 3,
+          "region": "Champagne"
+        }
+      ],
+      "reason": "Control: special cuvée versus different limited bottlings",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "moet-imperial",
+      "input": {
+        "name": "Moët & Chandon Brut Imperial Champagne 75cl",
+        "type": "sparkling"
+      },
+      "expected": {
+        "topId": 1122095,
+        "mustExcludeIds": [
+          1122092
+        ]
+      },
+      "candidates": [
+        {
+          "id": 1122092,
+          "name": "Impérial Rosé Brut Champagne",
+          "winery": "Moët & Chandon",
+          "type_id": 3,
+          "region": "Champagne"
+        },
+        {
+          "id": 1122095,
+          "name": "Impérial Brut Champagne",
+          "winery": "Moët & Chandon",
+          "type_id": 3,
+          "region": "Champagne"
+        },
+        {
+          "id": 13212052,
+          "name": "Pharrell Impérial Brut Champagne",
+          "winery": "Moët & Chandon",
+          "type_id": 3,
+          "region": "Champagne"
+        }
+      ],
+      "reason": "Control: non-rosé Champagne should not become Brut Rosé",
+      "source": "Vivino Algolia 2026-11-07"
+    },
+    {
+      "verified": true,
+      "id": "wanderer-after-dark",
+      "input": {
+        "name": "The Wanderer After Dark Malbec",
+        "type": "red"
+      },
+      "expected": {
+        "topId": 10725356,
+        "mustExcludeIds": [
+          3383528,
+          5944115
+        ]
+      },
+      "candidates": [
+        {
+          "id": 3383528,
+          "name": "Malbec",
+          "winery": "Tall Dark Stranger",
+          "type_id": 1,
+          "region": "Mendoza"
+        },
+        {
+          "id": 5944115,
+          "name": "Murder In The Dark Malbec",
+          "winery": "Dream Bird",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 10725356,
+          "name": "Malbec",
+          "winery": "The Wanderer",
+          "type_id": 1,
+          "region": "San Juan"
+        }
+      ],
+      "reason": "Control: generic marketing term Dark must not override winery",
+      "source": "Existing test/label-noise.test.mjs"
+    },
+    {
+      "verified": true,
+      "id": "fanny-anatole-red",
+      "input": {
+        "name": "Fanny Sabre Anatole",
+        "type": "red"
+      },
+      "expected": {
+        "mustIncludeIds": [
+          12248328
+        ],
+        "mustExcludeIds": [
+          6570229,
+          11005617
+        ]
+      },
+      "candidates": [
+        {
+          "id": 6570229,
+          "name": "Cuvée Anatole Blanc",
+          "winery": "Fanny Sabre",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 12248328,
+          "name": "Cuvée Anatole Rouge",
+          "winery": "Fanny Sabre",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 11005617,
+          "name": "Cuvée Anatole Rosé",
+          "winery": "Fanny Sabre",
+          "type_id": 4,
+          "region": ""
+        },
+        {
+          "id": 5821880,
+          "name": "Cuvée Anatole Pinot Noir",
+          "winery": "Fanny Sabre",
+          "type_id": 1,
+          "region": ""
+        }
+      ],
+      "reason": "Known wine type should exclude incompatible indexed categories",
+      "source": "Existing test/wine-type.test.mjs"
+    },
+    {
+      "verified": true,
+      "id": "fanny-anatole-ambiguous",
+      "input": {
+        "name": "Fanny Sabre Anatole"
+      },
+      "expected": {
+        "mustIncludeIds": [
+          12248328,
+          6570229
+        ]
+      },
+      "candidates": [
+        {
+          "id": 6570229,
+          "name": "Cuvée Anatole Blanc",
+          "winery": "Fanny Sabre",
+          "type_id": 2,
+          "region": ""
+        },
+        {
+          "id": 12248328,
+          "name": "Cuvée Anatole Rouge",
+          "winery": "Fanny Sabre",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 11005617,
+          "name": "Cuvée Anatole Rosé",
+          "winery": "Fanny Sabre",
+          "type_id": 4,
+          "region": ""
+        }
+      ],
+      "reason": "Without menu colour, retain multiple plausible cuvées",
+      "source": "Existing test/wine-type.test.mjs"
+    },
+    {
+      "verified": false,
+      "id": "sainsburys-montepulciano-pending",
+      "input": {
+        "name": "Sainsbury's Montepulciano d'Abruzzo Red Wine, Taste the Difference 75cl",
+        "type": "red"
+      },
+      "expected": {
+        "topId": 12036641,
+        "mustExcludeIds": [
+          13353316
+        ]
+      },
+      "candidates": [
+        {
+          "id": 13353316,
+          "name": "Taste the Difference Malbec",
+          "winery": "Sainsbury's",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 12036641,
+          "name": "Montepulciano d'Abruzzo",
+          "winery": "Sainsbury's",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 12618460,
+          "name": "Taste The Difference Cabernet Sauvignon",
+          "winery": "Sainsbury's",
+          "type_id": 1,
+          "region": ""
+        }
+      ],
+      "reason": "Correct grape outranks the unrelated own-label Malbec; exact retailer edition awaits independent label verification",
+      "source": "Vivino Algolia 2026-11-07; not fully identity-verified"
+    },
+    {
+      "verified": false,
+      "id": "sainsburys-prosecco-pending",
+      "input": {
+        "name": "Sainsbury's Prosecco, Taste the Difference 75cl",
+        "type": "sparkling"
+      },
+      "expected": {
+        "empty": true
+      },
+      "candidates": [
+        {
+          "id": 13921926,
+          "name": "Taste The Difference Discovery Pét Nat",
+          "winery": "Sainsbury's",
+          "type_id": 3,
+          "region": ""
+        },
+        {
+          "id": 13647174,
+          "name": "Taste The Difference Blanc de Blancs Brut",
+          "winery": "Sainsbury's",
+          "type_id": 3,
+          "region": ""
+        },
+        {
+          "id": 9096427,
+          "name": "Prosecco Rosé",
+          "winery": "Sainsbury's",
+          "type_id": 3,
+          "region": ""
+        }
+      ],
+      "reason": "None of these are the plain Prosecco; underlying retailer edition needs confirmation",
+      "source": "Vivino Algolia 2026-11-07; product uncertain"
+    },
+    {
+      "verified": false,
+      "id": "caminada-cabernet-pending",
+      "input": {
+        "name": "Caminada Cabernet Sauvignon Red Wine 75cl",
+        "type": "red"
+      },
+      "expected": {
+        "empty": true
+      },
+      "candidates": [
+        {
+          "id": 3510825,
+          "name": "Cabernet Sauvignon",
+          "winery": "Camina",
+          "type_id": 1,
+          "region": ""
+        },
+        {
+          "id": 11906111,
+          "name": "Cabernet Sauvignon",
+          "winery": "Blake Boulevard",
+          "type_id": 1,
+          "region": ""
+        }
+      ],
+      "reason": "Cannot verify whether Camina is an alias of Caminada; do not assert no-match without confirming",
+      "source": "Vivino Algolia 2026-11-07; identity unresolved"
+    }
+  ]
+}
