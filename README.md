@@ -131,22 +131,20 @@ browser-local and reset when the page reloads or a new enrichment runs.
 
 ## Menu-price deep links (Issue #20)
 
-GitHub Pages can import a menu extracted elsewhere by an LLM (e.g. from a restaurant photograph). **No LLM or server is required inside Pages.** The shareable fragment supports up to **60 wines**, with the original restaurant price kept in the `metadata.menuPrice` field:
+The Pages app imports wine lists from an LLM-generated URL fragment. The input has an optional **numeric** `menuPrice` field; `metadata` is for other notes and does not contain prices. Currency is not inferred.
 
 ```ts
 const wines = [
   { name: "G.D. Vajra Barbera d'Alba", year: 2022, type: 'red',
-    metadata: { menuPrice: '£58', serving: 'bottle' } },
-  { name: 'Opus One', year: 2021, metadata: { menuPrice: '£420' } },
+    menuPrice: 58, metadata: { serving: 'bottle' } },
+  { name: 'Opus One', year: 2021, menuPrice: 420 },
 ];
 const url = 'https://choonkiatlee.github.io/wines/#wines=' +
   encodeURIComponent(JSON.stringify(wines)) + '&autorun=true';
 ```
 
-The app loads the inputs and starts searching **only** when `autorun=true`. Without that flag it only prepopulates the editor. The default results order is **highest Vivino rating first**; there is no URL sorting parameter. On-page sorting/filtering remains available. The menu price is source information, **not** a Vivino price or a wine-identity signal; the matching library ignores all `metadata`, and the compact match output remains unchanged. Menu metadata stays attached to the original menu input even if users choose another candidate.
+`autorun=true` triggers the existing enrichment submission; without it, the list is merely prepopulated. The default sort is Vivino rating descending. On-page sorting offers **menu price ascending/descending**, rating, type and original order, with missing values last. Menu price belongs to the original menu entry and never participates in wine matching or changes when a user selects another candidate.
 
-For long menus, **Copy share link** creates a shorter `#z=<base64url gzip>&autorun=true` link when the browser supports `CompressionStream`; import also supports this format using `DecompressionStream`. The pure helper functions `plainWineLink`, `createShareLink`, `readWineLink`, and `parseWineInputs` live in `apps/pages/src/deep-link.ts`.
+`Copy share link` uses gzip/base64url compression (`#z=...`) when shorter; an LLM can construct `#wines=<URL-encoded JSON>` directly. Limits are 1–60 wines, 24 KB decoded input, 16,000-character incoming fragments and an 8,000-character share-link budget. Longer lists may need to be split. Never put private data into these shareable URL fragments. Existing links using `metadata.menuPrice` are **not** converted to the new field; regenerate them using top-level `menuPrice`.
 
-Limits are deliberate: 1–60 entries, 24 KB decoded JSON, 16,000-character incoming fragments, and a conservative **8,000-character budget for links produced by the site**. A 60-wine list with short names/prices will generally compress comfortably; very verbose names/notes may not. If a link is too long, split the menu or remove unneeded metadata. Client-generated compressed links are easier to share; an LLM can generate the plain JSON variant directly without gzip tooling. Long plain links may be truncated by some messaging apps even when supported by the browser. URLs are shareable and **not private storage**; do not include sensitive data.
-
-The Pages app uses existing `enrichWines()` with unchanged API/search semantics. At 60 inputs the number of live Algolia requests can be high, so upstream rate limits, CORS and availability still apply. The UI reports failures as it does for smaller lists.
+The website remains static and calls `enrichWines()` in the browser; the Vivino client and matching library do not use menu prices. Browser CORS restrictions and upstream request quotas still apply, especially for 60-wine lists.

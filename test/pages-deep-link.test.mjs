@@ -2,14 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   MAX_WINES, MAX_SHARE_URL_CHARS, parseWineInputs, plainWineLink,
-  readWineLink, createShareLink, menuPrice,
+  readWineLink, createShareLink,
 } from '../apps/pages/src/deep-link.ts';
 
 const PAGE = 'https://choonkiatlee.github.io/wines/';
 const sample = [
-  { name: "G.D. Vajra Barbera d'Alba", year: 2022, type: 'red',
-    metadata: { menuPrice: '£58', serving: 'bottle', section: 'Piémont', notes: 'Café rosé' } },
-  { name: 'Château d’Yquem', year: 2015, metadata: { menuPrice: '£42 / glass' } },
+  { name: "G.D. Vajra Barbera d'Alba", year: 2022, type: 'red', menuPrice: 58,
+    metadata: { serving: 'bottle', section: 'Piémont', notes: 'Café rosé' } },
+  { name: 'Château d’Yquem', year: 2015, menuPrice: 42, metadata: { serving: 'glass' } },
 ];
 
 test('plain agent-generated fragment supports Unicode, price and optional autorun', async () => {
@@ -19,8 +19,8 @@ test('plain agent-generated fragment supports Unicode, price and optional autoru
   assert.deepEqual(decoded, { wines: sample, autorun: true });
   const manual = plainWineLink(PAGE, sample, false);
   assert.equal((await readWineLink(new URL(manual).hash)).autorun, false);
-  assert.equal(menuPrice(decoded.wines[0]), '£58');
-  assert.equal(menuPrice(decoded.wines[1]), '£42 / glass');
+  assert.equal(decoded.wines[0].menuPrice, 58);
+  assert.equal(decoded.wines[1].menuPrice, 42);
 });
 
 test('browser-generated compressed link restores 60 wines including original menu prices', async () => {
@@ -28,7 +28,8 @@ test('browser-generated compressed link restores 60 wines including original men
     name: 'Domaine ' + i + ' Côte du Rhône Réserve Spéciale',
     year: 2000 + i % 20,
     type: i % 2 === 0 ? 'red' : 'white',
-    metadata: { menuPrice: '£' + (30 + i), serving: 'bottle', section: 'Région ' + (i % 6) },
+    menuPrice: 30 + i,
+    metadata: { serving: 'bottle', section: 'Région ' + (i % 6) },
   }));
   const result = await createShareLink(PAGE, items, true);
   assert.equal(result.compressed, true);
@@ -46,21 +47,22 @@ test('share-link URLs strip existing hash and query, never selected candidates o
 
 test('metadata is optional and respects original input ordering', () => {
   const rows = parseWineInputs(JSON.stringify([
-    { name: 'First', metadata: { menuPrice: '£18' } },
+    { name: 'First', menuPrice: 18, metadata: { notes: 'chilled' } },
     { name: 'Second' },
-    { name: 'Third', metadata: { menuPrice: 99 } },
+    { name: 'Third', menuPrice: 99 },
   ]));
-  assert.equal(menuPrice(rows[0]), '£18');
-  assert.equal(menuPrice(rows[1]), null);
-  assert.equal(menuPrice(rows[2]), '99');
-  assert.equal(rows[0].metadata.menuPrice, '£18');
+  assert.equal(rows[0].menuPrice, 18);
+  assert.equal(rows[1].menuPrice, undefined);
+  assert.equal(rows[2].menuPrice, 99);
+  assert.equal(rows[0].metadata.notes, 'chilled');
 });
 
 test('invalid/malformed/oversized inputs are rejected before any fetch could occur', async () => {
   const invalid = [
     [], Array.from({ length: MAX_WINES + 1 }, (_, i) => ({ name: 'Wine ' + i })),
     [{ name: '' }], [{ name: 'A', year: '2022' }],
-    [{ name: 'B', type: 'blue' }], [{ name: 'C', metadata: { menuPrice: ['£42'] } }],
+    [{ name: 'B', type: 'blue' }], [{ name: 'C', menuPrice: '£42' }],
+    [{ name: 'C', menuPrice: -1 }], [{ name: 'C', menuPrice: null }],
     [{ name: 'D', metadata: { notes: 'x'.repeat(221) } }],
     [{ name: 'E', metadata: { a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9 } }],
   ];

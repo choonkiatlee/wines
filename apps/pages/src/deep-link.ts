@@ -50,6 +50,12 @@ export function parseWineInputs(json: string): WineEnrichmentInput[] {
       }
       wine.type = row.type as WineType;
     }
+    if (row.menuPrice !== undefined) {
+      if (typeof row.menuPrice !== 'number' || !Number.isFinite(row.menuPrice) || row.menuPrice < 0) {
+        throw new TypeError(where + ' menuPrice must be a non-negative number.');
+      }
+      wine.menuPrice = row.menuPrice;
+    }
     if (row.metadata !== undefined) {
       const value = row.metadata;
       if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -76,11 +82,6 @@ export function parseWineInputs(json: string): WineEnrichmentInput[] {
     }
     return wine;
   });
-}
-
-export function menuPrice(input: WineEnrichmentInput): string | null {
-  const value = input.metadata?.menuPrice;
-  return typeof value === 'string' || typeof value === 'number' ? String(value) : null;
 }
 
 function baseUrl(pageUrl: string): string {

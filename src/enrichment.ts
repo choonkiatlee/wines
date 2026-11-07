@@ -13,6 +13,8 @@ export type WineEnrichmentInput = {
   name: string;
   year?: number;
   type?: WineType;
+  /** Numeric price as listed on the restaurant menu; currency not inferred. */
+  menuPrice?: number;
   metadata?: WineMenuMetadata;
 };
 export type CompactWineMatch = {

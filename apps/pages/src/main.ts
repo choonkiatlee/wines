@@ -7,7 +7,7 @@ import {
 import type { FullWineRow, Selection } from './selection.ts';
 import { visibleRows, wineTypeFor, WINE_TYPE_LABELS } from './table-view.ts';
 import type { TypeFilter, SortKey } from './table-view.ts';
-import { createShareLink, menuPrice, parseWineInputs, readWineLink } from './deep-link.ts';
+import { createShareLink, parseWineInputs, readWineLink } from './deep-link.ts';
 import './style.css';
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -149,8 +149,9 @@ function renderTable(): void {
     menuCell.append(element('strong', 'menu-name', inputs[i].name));
     const inputMeta = inputs[i].year ? String(inputs[i].year) : '';
     if (inputMeta) menuCell.append(element('span', 'menu-subline', inputMeta));
-    const price = menuPrice(inputs[i]);
-    if (price !== null) menuCell.append(element('span', 'menu-price', price + ' · Menu'));
+    if (inputs[i].menuPrice !== undefined) {
+      menuCell.append(element('span', 'menu-price', String(inputs[i].menuPrice) + ' · Menu'));
+    }
     const kind = wineTypeFor(inputs[i], row, chosen);
     menuCell.append(element('span', 'wine-type-tag type-' + kind,
       kind === 'unknown' ? 'Type unknown' : WINE_TYPE_LABELS[kind]));
@@ -287,14 +288,15 @@ function renderDetail(): void {
     dialogContent.append(empty);
   }
 
-  const sourceMeta = inputs[activeRow].metadata;
-  if (sourceMeta && Object.keys(sourceMeta).length) {
+  const menuInput = inputs[activeRow];
+  const sourceMeta = menuInput.metadata;
+  if (menuInput.menuPrice !== undefined || (sourceMeta && Object.keys(sourceMeta).length)) {
     const menuDetails = element('section', 'menu-details');
     menuDetails.append(element('h3', 'detail-subheading', 'From the restaurant menu'));
     const details = element('dl', 'metadata-grid');
-    for (const [key, value] of Object.entries(sourceMeta)) {
-      const label = key === 'menuPrice' ? 'Menu price' :
-        key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ');
+    addMetadata(details, 'Menu price', menuInput.menuPrice);
+    for (const [key, value] of Object.entries(sourceMeta ?? {})) {
+      const label = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ');
       addMetadata(details, label.charAt(0).toUpperCase() + label.slice(1), value);
     }
     menuDetails.append(details);
