@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   initialSelections, chooseCandidate, selectedProfile, ratingFor,
-  displayWineName, selectionSummary,
+  displayWineName, selectionSummary, producerRatingLine,
 } from '../apps/pages/src/selection.ts';
 
 function profile(id, name, vintage = null, overall = null) {
@@ -63,4 +63,17 @@ test('vintage ratings take precedence, otherwise overall remains explicitly labe
 test('producer name is not repeated when already part of the wine name', () => {
   assert.equal(displayWineName(profile(1, 'Producer Reserve')), 'Producer Reserve');
   assert.equal(displayWineName(profile(2, 'Reserve')), 'Producer · Reserve');
+});
+
+test('producer rating text uses preloaded profile stats and labels producer separately', () => {
+  const p = profile(41, 'Ravera');
+  p.winery = {id:2606,name:'G.D. Vajra',ratingAverage:4,
+    ratingCount:162821,winesCount:28};
+  assert.equal(producerRatingLine(p),
+    '★ 4.0 / 5 · 162,821 ratings · 28 wines');
+  p.winery = {id:2606,name:'G.D. Vajra',ratingAverage:null,
+    ratingCount:null,winesCount:null};
+  assert.equal(producerRatingLine(p),null);
+  delete p.winery;
+  assert.equal(producerRatingLine(p),null);
 });
