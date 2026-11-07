@@ -83,6 +83,8 @@ h2 { font-family: Georgia, "Times New Roman", serif; font-size: 2rem; font-weigh
 .table-rating { display: flex; align-items: center; gap: 6px; font-size: .98rem; }
 .rating-star, .hero-star { color: #b18a4e; }
 .rating-caption { display: block; color: #8a857d; font-size: .75rem; margin-top: 5px; }
+.producer-caption { display: block; color: #716a64; font-size: .7rem; margin-top: 7px;
+  white-space: normal; line-height: 1.3; }
 .muted { color: #97918a; }
 .action-cell { text-align: right; width: 35px; }
 .row-arrow { font-size: 1.9rem; line-height: 1; color: #a7a098; }
@@ -124,6 +126,11 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
 .hero-score { font-size: 2.05rem; letter-spacing: -.04em; }
 .hero-rating-description { color: #716b64; font-size: .86rem; }
 .rating-counts { color: #817970; font-size: .82rem; margin: 7px 0 0; }
+.producer-rating-summary { display: flex; flex-direction: column; gap: 4px;
+  margin: 15px 0 0; padding-top: 12px; border-top: 1px solid #eeece7;
+  color: #716a64; font-size: .8rem; line-height: 1.4; }
+.producer-rating-title { font-size: .7rem; font-weight: 650; color: #91887d;
+  text-transform: uppercase; letter-spacing: .035em; }
 .detail-info { margin-top: 28px; border-top: 1px solid #eeece7; padding-top: 24px; }
 .detail-subheading { font-size: .95rem; margin: 0 0 9px; }
 .description { color: #615d57; line-height: 1.65; margin: 0; font-size: .89rem; max-width: 760px; }
@@ -205,6 +212,8 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
   .match-button { gap: 11px; min-height: 58px; }
   .rating-cell .table-rating { justify-content: flex-end; }
   .rating-caption { white-space: normal; font-size: .68rem; max-width: 130px; }
+  .producer-caption { max-width: 136px; margin-left: auto; font-size: .66rem; }
+  .producer-rating-summary { margin-top: 11px; font-size: .73rem; }
   .notes-cell .notes-excerpt { -webkit-line-clamp: 3; }
   /* The same accessible native dialog fills the device rather than opening a bottom sheet. */
   .wine-dialog { position: fixed; inset: 0; margin: 0; width: 100vw; max-width: 100vw;
