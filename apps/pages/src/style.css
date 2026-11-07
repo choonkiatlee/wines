@@ -241,3 +241,17 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
 .menu-details { margin-top: 26px; padding: 21px 0 4px; border-top: 1px solid #eeece7; }
 .menu-details .metadata-grid { margin-top: 14px; }
 .menu-details .meta-item:first-child dd { color: var(--red); font-weight: 750; }
+
+/* Optional short source-description excerpts keep the default shortlist compact. */
+.notes-toggle { display: inline-flex; align-items: center; gap: 9px; margin: 0;
+  font-size: .83rem; font-weight: 650; color: #615c55; cursor: pointer; padding: 9px 3px; }
+.notes-toggle input { width: 16px; height: 16px; margin: 0; accent-color: var(--red); cursor: pointer; }
+.wine-table th[hidden] { display: none; }
+.notes-cell { min-width: 230px; width: 31%; max-width: 380px; }
+.notes-excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+  overflow: hidden; color: #68635d; font-size: .83rem; line-height: 1.45; }
+.description { white-space: pre-line; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .notes-toggle { flex: 1 1 100%; }
+  .notes-cell { min-width: 215px; }
+}
