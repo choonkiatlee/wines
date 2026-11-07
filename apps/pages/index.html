@@ -41,6 +41,29 @@
         </div>
         <span id="results-count" class="count-pill">Not searched</span>
       </div>
+      <div class="table-toolbar" aria-label="Wine table controls">
+        <label class="toolbar-field" for="type-filter"><span>Type</span>
+          <select id="type-filter" disabled>
+            <option value="all">All types</option>
+            <option value="red">Red</option>
+            <option value="white">White</option>
+            <option value="rose">Rosé</option>
+            <option value="sparkling">Sparkling</option>
+            <option value="dessert">Dessert</option>
+            <option value="fortified">Fortified</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </label>
+        <label class="toolbar-field" for="sort-by"><span>Sort by</span>
+          <select id="sort-by" disabled>
+            <option value="original">Original order</option>
+            <option value="rating-desc">Rating: highest first</option>
+            <option value="rating-asc">Rating: lowest first</option>
+            <option value="type">Type: A–Z</option>
+          </select>
+        </label>
+        <button type="button" id="reset-table" class="reset-table" hidden>Clear filters</button>
+      </div>
       <div class="table-frame">
         <table class="wine-table">
           <thead><tr><th scope="col">Your wine</th><th scope="col">Current match</th><th scope="col">Vivino rating</th><th scope="col"><span class="visually-hidden">Details</span></th></tr></thead>

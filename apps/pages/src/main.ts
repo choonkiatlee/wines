@@ -5,6 +5,8 @@ import {
   selectedProfile, selectionSummary,
 } from './selection.ts';
 import type { FullWineRow, Selection } from './selection.ts';
+import { visibleRows, wineTypeFor, WINE_TYPE_LABELS } from './table-view.ts';
+import type { TypeFilter, SortKey } from './table-view.ts';
 import './style.css';
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -19,6 +21,9 @@ const inputDetails = byId<HTMLDetailsElement>('input-details');
 const status = byId<HTMLParagraphElement>('status');
 const resultsBody = byId<HTMLTableSectionElement>('results-body');
 const resultsCount = byId<HTMLElement>('results-count');
+const typeFilter = byId<HTMLSelectElement>('type-filter');
+const sortBy = byId<HTMLSelectElement>('sort-by');
+const resetTable = byId<HTMLButtonElement>('reset-table');
 const enrichButton = byId<HTMLButtonElement>('enrich-button');
 const connectionButton = byId<HTMLButtonElement>('connection-button');
 const dialog = byId<HTMLDialogElement>('wine-dialog');
@@ -32,6 +37,8 @@ let rows: FullWineRow[] = [];
 let choices: Selection[] = [];
 let activeRow: number | null = null;
 let lastRowIndex: number | null = null;
+let currentTypeFilter: TypeFilter = 'all';
+let currentSort: SortKey = 'original';
 
 function setBusy(busy: boolean): void {
   enrichButton.disabled = busy;
@@ -137,24 +144,39 @@ function appendCell(row: HTMLTableRowElement, className = ''): HTMLTableCellElem
 function renderTable(): void {
   resultsBody.replaceChildren();
   const summary = selectionSummary(rows, choices);
-  resultsCount.textContent = summary.total + ' wine' + (summary.total === 1 ? '' : 's') +
-    (summary.chosen ? ' · ' + summary.chosen + ' reviewed' : '') +
-    (summary.noCandidates ? ' · ' + summary.noCandidates + ' without matches' : '');
+  const shown = visibleRows(inputs, rows, choices, currentTypeFilter, currentSort);
+  resultsCount.textContent = 'Showing ' + shown.length + ' of ' + summary.total +
+    (summary.chosen ? ' · ' + summary.chosen + ' reviewed' : '');
+  resetTable.hidden = currentTypeFilter === 'all' && currentSort === 'original';
 
-  rows.forEach((row, i) => {
+  if (!shown.length) {
+    const empty = element('tr');
+    const td = appendCell(empty, 'empty');
+    td.colSpan = 4;
+    td.append(element('strong', '', 'No wines match this filter'));
+    td.append(element('span', '', 'Try another type or clear the filters.'));
+    resultsBody.append(empty);
+  }
+
+  shown.forEach(({ index: i }) => {
+    const row = rows[i];
     const chosen = choices[i];
     const profile = selectedProfile(row, chosen);
     const tr = element('tr', 'wine-row' + (chosen.chosen ? ' reviewed-row' : ''));
     tr.addEventListener('click', () => openDetail(i));
     const menuCell = appendCell(tr, 'menu-cell');
     menuCell.append(element('strong', 'menu-name', inputs[i].name));
-    const inputMeta = [inputs[i].year, inputs[i].type].filter(v => v !== undefined).join(' · ');
+    const inputMeta = inputs[i].year ? String(inputs[i].year) : '';
     if (inputMeta) menuCell.append(element('span', 'menu-subline', inputMeta));
+    const kind = wineTypeFor(inputs[i], row, chosen);
+    menuCell.append(element('span', 'wine-type-tag type-' + kind,
+      kind === 'unknown' ? 'Type unknown' : WINE_TYPE_LABELS[kind]));
     if (row.error) menuCell.append(element('span', 'error-hint', 'Partial upstream error'));
 
     const matchCell = appendCell(tr, 'match-cell');
     const button = element('button', 'match-button') as HTMLButtonElement;
     button.type = 'button';
+    button.dataset.rowIndex = String(i);
     button.setAttribute('aria-haspopup', 'dialog');
     button.setAttribute('aria-label', 'Inspect matches for ' + inputs[i].name);
     if (profile) {
@@ -247,6 +269,8 @@ function renderDetail(): void {
       info.append(element('p', 'scope-note', 'Source description is wine-level, not necessarily vintage-specific.'));
     }
     const metadata = element('dl', 'metadata-grid');
+    const selectedType = wineTypeFor(inputs[activeRow], row, choice);
+    addMetadata(metadata, 'Wine type', selectedType === 'unknown' ? 'Unknown' : WINE_TYPE_LABELS[selectedType]);
     addMetadata(metadata, 'Producer', profile.wine.winery);
     addMetadata(metadata, 'Region', profile.wine.region);
     addMetadata(metadata, 'Country', profile.wine.country?.toUpperCase());
@@ -296,7 +320,11 @@ function renderDetail(): void {
     button.append(imageBox(candidate.wine.imageUrl, 'option-image', ''));
     const copy = element('span', 'option-copy');
     copy.append(element('strong', 'option-name', displayWineName(candidate)));
-    const region = [candidate.vintage?.year, candidate.wine.region].filter(Boolean).join(' · ');
+    const indexedType = candidate.wine.typeId;
+    const indexedName = indexedType === 1 ? 'Red' : indexedType === 2 ? 'White' :
+      indexedType === 3 ? 'Sparkling' : indexedType === 4 ? 'Rosé' :
+      indexedType === 7 ? 'Dessert' : indexedType === 24 ? 'Fortified' : null;
+    const region = [candidate.vintage?.year, indexedName, candidate.wine.region].filter(Boolean).join(' · ');
     if (region) copy.append(element('span', 'option-location', region));
     const stat = element('span', 'option-rating', '★ ' + ratingLabel(candidate) + ' · ' +
       (ratingFor(candidate)?.scope === 'vintage' ? 'Vintage' : ratingFor(candidate) ? 'Overall' : 'Unrated'));
@@ -348,7 +376,9 @@ dialog.addEventListener('close', () => {
   activeRow = null;
   // Table rows are replaced when a selection changes; restore focus by row index.
   if (lastRowIndex !== null) {
-    resultsBody.querySelectorAll('tr')[lastRowIndex]?.querySelector('button')?.focus();
+    const originalButton = resultsBody.querySelector<HTMLButtonElement>(
+      'button[data-row-index="' + lastRowIndex + '"]');
+    (originalButton ?? typeFilter).focus();
   }
   lastRowIndex = null;
 });
@@ -363,6 +393,12 @@ form.addEventListener('submit', async event => {
     inputs = pendingInputs;
     rows = pendingRows;
     choices = initialSelections(rows);
+    currentTypeFilter = 'all';
+    currentSort = 'original';
+    typeFilter.value = 'all';
+    sortBy.value = 'original';
+    typeFilter.disabled = false;
+    sortBy.disabled = false;
     renderTable();
     inputDetails.open = false;
     const summary = selectionSummary(rows, choices);
@@ -390,4 +426,23 @@ connectionButton.addEventListener('click', async () => {
   } finally {
     setBusy(false);
   }
+});
+
+typeFilter.addEventListener('change', () => {
+  currentTypeFilter = typeFilter.value as TypeFilter;
+  renderTable();
+});
+
+sortBy.addEventListener('change', () => {
+  currentSort = sortBy.value as SortKey;
+  renderTable();
+});
+
+resetTable.addEventListener('click', () => {
+  currentTypeFilter = 'all';
+  currentSort = 'original';
+  typeFilter.value = 'all';
+  sortBy.value = 'original';
+  renderTable();
+  typeFilter.focus();
 });

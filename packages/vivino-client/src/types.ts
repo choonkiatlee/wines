@@ -152,6 +152,8 @@ export type AlgoliaWineProfile = {
     id: number; name: string; winery: string | null; region: string | null; country: string | null;
     alcohol: number | null; closure: string | null; nonVintage: boolean | null;
     grapeIds: number[] | null; foodIds: number[] | null; styleId: number | null; imageUrl: string | null;
+    /** Vivino index category ID, if known; null means unknown. */
+    typeId: number | null;
   };
   vintage: { id: number; year: number } | null;
   ratings: { vintage: AlgoliaRating | null; allVintages: AlgoliaRating | null };
