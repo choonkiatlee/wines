@@ -118,3 +118,13 @@ requests do not prove browser access. If blocked, the browser cannot work
 around CORS and a small server-side HTTP adapter would be necessary.
 The bundled search-only Algolia credentials are visible to page visitors.
 Provider reuse permissions, quotas, and availability remain separate concerns.
+
+### Reviewing matches in Pages
+
+The Pages playground deliberately shows **one row per input**, rather than every
+candidate or full normalized JSON. Opening a row reveals the source wine image,
+description, vintage-vs-overall rating scope, metadata, and up to three ranked
+candidate choices. Choosing another candidate updates only that row without
+making additional requests. `None of these` marks a row unresolved. The first
+candidate is an unverified suggestion until explicitly chosen; selections are
+browser-local and reset when the page reloads or a new enrichment runs.

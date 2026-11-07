@@ -319,7 +319,11 @@ function renderDetail(): void {
     none.addEventListener('click', () => updateChoice(null));
     options.append(none);
   }
-  section.append(options);
+  if (!row.matches.length) {
+    section.append(element('p', 'no-options', 'There are no alternatives to choose from for this input.'));
+  } else {
+    section.append(options);
+  }
   if (row.error) {
     section.append(element('p', 'detail-error',
       'Some results may be missing because the upstream service was unavailable.'));
