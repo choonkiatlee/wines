@@ -199,12 +199,9 @@ function updateChoice(index: number | null): void {
   renderDetail();
   const focusValue = index === null ? 'none' : String(index);
   const buttons = dialogContent.querySelectorAll<HTMLButtonElement>('button[data-choice]');
-  for (const button of buttons) {
-    if (button.dataset.choice === focusValue) {
-      button.focus();
-      break;
-    }
-  }
+  buttons.forEach(button => {
+    if (button.dataset.choice === focusValue) button.focus();
+  });
 }
 
 function renderDetail(): void {
