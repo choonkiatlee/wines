@@ -43,22 +43,50 @@ function tokens(value: string): string[] {
 function significant(value: string): string[] {
   return [...new Set(tokens(value).filter(t => !STOPWORDS.has(t)))];
 }
+/**
+ * Search-only normalization. Do not discard the original or translate genuine cuvée words.
+ * These are retailer/packaging descriptors, not winery identities.
+ */
+function identityName(name: string): string {
+  return name.trim()
+    .replace(/\([^)]*\bsmall bottle\b[^)]*\)/gi, ' ')
+    .replace(/\b\d+(?:\.\d+)?\s*(?:cl|ml|litres?|liters?)\b/gi, ' ')
+    .replace(/\b(?:red|white|ros[ée])\s+(?:boxed\s+)?wine\b/gi, ' ')
+    .replace(/\bboxed\s+wine\b/gi, ' ')
+    .replace(/\btaste\s+the\s+difference\b/gi, ' ')
+    .replace(/\bnon[\s-]?vintage\b/gi, ' ')
+    .replace(/[,\s]+/g, ' ').trim();
+}
+
+/** A scoped alias observed for one actual wine, not a general-purpose translation dictionary. */
+function labelAliases(value: string): string[] {
+  if (/^veuve\s+clicquot\b/i.test(value) && /\byellow\s+label\b/i.test(value)) {
+    return [
+      value.replace(/\byellow\s+label\b/i, '').replace(/\s+/g, ' ').trim(),
+      value.replace(/\byellow\s+label\b/i, 'Carte Jaune'),
+    ];
+  }
+  return [];
+}
+function matchingName(name: string): string {
+  const clean = identityName(name);
+  if (/^veuve\s+clicquot\b/i.test(clean)) return clean.replace(/\byellow\s+label\b/i, 'Carte Jaune');
+  return clean;
+}
 function searchQueries(name: string): string[] {
   const original = name.trim().replace(/\s+/g, ' ');
-  const folded = tokens(original).join(' ');
-  const words = significant(original);
-  const short = words.slice(0, 3).join(' ');
-  // Long bottle labels sometimes put promotional text between the producer and
-  // grape/cuvee. A first+last query can recover the underlying wine without
-  // permanently removing possible real cuvee words such as "After Dark".
+  const clean = identityName(original);
+  const words = significant(clean);
+  const folded = tokens(clean).join(' ');
   const edges = words.length >= 4 ? words[0] + ' ' + words.at(-1) : '';
+  const short = words.slice(0, 3).join(' ');
   const seen = new Set<string>();
-  return [original, folded, edges, short].filter(query => {
+  return [original, clean, ...labelAliases(clean), folded, edges, short].filter(query => {
     const key = query.toLowerCase();
     if (!query || seen.has(key)) return false;
     seen.add(key);
     return true;
-  }).slice(0, 4);
+  }).slice(0, 6);
 }
 
 /** One insertion/deletion/substitution or adjacent transposition for reasonably long tokens. */
@@ -118,7 +146,7 @@ function cuveeTokens(query: string[], winery: string[]): string[] {
   return query.slice(producerEnd + 1).filter(word => !winery.some(producer => similar(word, producer)));
 }
 function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
-  const query = significant(input.name);
+  const query = significant(matchingName(input.name));
   const name = significant(wine.name);
   const winery = significant(wine.winery?.name ?? '');
   const region = significant(wine.region?.name ?? '');
@@ -138,6 +166,12 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const producerAnchor = winery.some(word => similar(query[0], word)) ? 45
     : winery.some(word => similar(query[1] ?? '', word)) ? 25 : 0;
   const relevantHits = overlap(query, [...name, ...winery]);
+  // A long input with neither an early producer anchor nor a substantially
+  // matching wine name should abstain. Shared grape/marketing words alone
+  // are not evidence for substituting another producer.
+  const earlyProducer = overlap(query.slice(0, 2), winery) > 0;
+  const nameIdentity = overlap(query, name) >= Math.ceil(query.length * 0.75);
+  if (query.length >= 3 && !earlyProducer && !nameIdentity) return null;
   const hits = overlap(query, [...name, ...winery, ...region]);
   const threshold = Math.max(1, Math.ceil(query.length * 0.5));
   const cuvee = cuveeTokens(query, winery);
@@ -150,31 +184,70 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const anchoredCore = query.length >= 5 && producerAnchor > 0 && nameHits > 0;
   if (relevantHits < 1 || (hits < threshold && !anchoredCore) ||
     (cuvee.length > 0 && cuveeHits === 0)) return null;
-  const exactName = tokens(wine.name).join(' ') === tokens(input.name).join(' ');
-  const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ')).join(' ') === tokens(input.name).join(' ');
+  const exactName = tokens(wine.name).join(' ') === tokens(matchingName(input.name)).join(' ');
+  const exactFull = tokens([wine.winery?.name, wine.name].filter(Boolean).join(' ')).join(' ') === tokens(matchingName(input.name)).join(' ');
   const vintageAvailable = input.year !== undefined && wine.vintages?.some(v => Number(v.year) === input.year);
   const typeBonus = input.type !== undefined && indexedType === WINE_TYPE_IDS[input.type] ? 12 : 0;
   const extraNameTokens = Math.max(0, name.length - overlap(name, [...query, ...winery]));
   return 100 * hits / query.length + 20 * nameHits / query.length +
-    6 * wineryHits / query.length + (exactName || exactFull ? 20 : 0) +
+    6 * wineryHits / query.length + (exactName || exactFull ? 55 : 0) +
     (cuvee.length ? 45 * cuveeHits / cuvee.length +
       (cuveeHits === cuvee.length ? 12 : 0) - 10 * (cuvee.length - cuveeHits) : 0) +
     (vintageAvailable ? 3 : 0) + typeBonus + producerAnchor - 3 * extraNameTokens -
     Math.max(0, name.length + winery.length - query.length) * 0.3;
 }
-function hasStrongLabelAnchor(input: WineEnrichmentInput, candidates: Wine[]): boolean {
-  const query = significant(input.name);
-  if (query.length < 4) return true;
-  const first = query.slice(0, 2);
-  const last = query.at(-1)!;
-  return candidates.some(wine => overlap(first, significant(wine.winery?.name ?? '')) > 0 &&
-    overlap([last], significant(wine.name)) > 0);
-}
-function rank(input: WineEnrichmentInput, candidates: Wine[]): Wine[] {
+/** Rank candidates by wine identity, not the Algolia hit order or review popularity. */
+function scored(input: WineEnrichmentInput, candidates: Wine[]): Array<{ wine: Wine; index: number; score: number }> {
   return candidates.map((wine, index) => ({ wine, index, score: relevance(input, wine) }))
     .filter((entry): entry is { wine: Wine; index: number; score: number } => entry.score !== null)
-    .sort((a, b) => b.score - a.score || a.index - b.index || a.wine.id - b.wine.id)
-    .map(entry => entry.wine);
+    .sort((a, b) => b.score - a.score || a.index - b.index || a.wine.id - b.wine.id);
+}
+function rank(input: WineEnrichmentInput, candidates: Wine[]): Wine[] {
+  const ranked = scored(input, candidates);
+  const query = significant(matchingName(input.name));
+  const top = ranked[0]?.wine;
+  const topNameCoverage = top ? overlap(query, significant(top.name)) : 0;
+  const veryStrongName = !!top && query.length >= 4 && topNameCoverage >= query.length - 1;
+  const topWinery = significant(top?.winery?.name ?? '');
+  return ranked.filter(({ wine }) => {
+    const candidateName = significant(wine.name);
+    // A known distinct bottling (e.g. Veuve Yellow Label / Moët Impérial)
+    // must not turn into rosé just because producer + champagne match.
+    if (input.type === 'sparkling' && /\bchampagne\b/i.test(input.name) &&
+      !tokens(input.name).includes('rose') && tokens(wine.name).includes('rose')) return false;
+    // A verified scoped alias is defining identity, not merely a search hint.
+    if (/^veuve\s+clicquot\b/i.test(input.name) && /\byellow\s+label\b/i.test(input.name) &&
+      !(candidateName.includes('carte') && candidateName.includes('jaune'))) return false;
+    // Once the leading winery has been identified, another producer sharing
+    // the grape or a marketing token is not a useful alternative.
+    const producerWords = Math.min(2, topWinery.length);
+    if (top && top.id !== wine.id && producerWords > 0 &&
+      overlap(query.slice(0, 2), topWinery) >= producerWords &&
+      overlap(topWinery, significant(wine.winery?.name ?? '')) < producerWords) return false;
+    // Strong full-name evidence should outrank, and exclude, a wrong producer
+    // that shares the region/grape but misses the distinctive wine-name phrase.
+    if (veryStrongName && wine.id !== top!.id &&
+      overlap(query, candidateName) <= topNameCoverage - 2 &&
+      overlap(topWinery, significant(wine.winery?.name ?? '')) === 0) return false;
+    return true;
+  }).map(entry => entry.wine);
+}
+function hasStrongIdentity(input: WineEnrichmentInput, ranked: Wine[]): boolean {
+  const top = ranked[0];
+  if (!top) return false;
+  const query = significant(matchingName(input.name));
+  const name = significant(top.name);
+  const winery = significant(top.winery?.name ?? '');
+  if (!query.length) return false;
+  const wineryAtStart = overlap(query.slice(0, 2), winery) >= 1;
+  const nameHits = overlap(query, name);
+  const cuvee = cuveeTokens(query, winery);
+  const cuveeHits = overlap(cuvee, name);
+  const exact = tokens(top.name).join(' ') === tokens(matchingName(input.name)).join(' ');
+  const full = overlap(query, [...name, ...winery]) === query.length;
+  // Never stop on three approximate matches with no distinctive cuvée evidence.
+  return exact || (wineryAtStart && full && (!cuvee.length || cuveeHits === cuvee.length)) ||
+    (nameHits >= 3 && nameHits >= query.length - 1);
 }
 function limitConcurrency(max: number) {
   let active = 0;
@@ -277,7 +350,7 @@ export async function enrichWines(inputs: readonly WineEnrichmentInput[], option
       const ranked = rank(input, [...found.values()]);
       // Three superficially plausible hits can still all belong to the wrong
       // producer when promotional words dominate a longer label.
-      if (ranked.length >= 3 && hasStrongLabelAnchor(input, ranked)) break;
+      if (hasStrongIdentity(input, ranked)) break;
     }
     const top = rank(input, [...found.values()]).slice(0, 3);
     const profilesByRank = await Promise.all(top.map(candidate => getProfile(candidate, input.year).catch(() => {
