@@ -1,15 +1,6 @@
 name: Wine matching regression and live Vivino check
 on:
   workflow_dispatch:
-  push:
-    branches: [feat/wine-match-regressions-14]
-    paths:
-      - src/enrichment.ts
-      - test/fixtures/wine-matching-regressions.json
-      - test/lib/wine-matching-cases.mjs
-      - test/wine-matching-regressions.test.mjs
-      - scripts/benchmark-wine-matching.mjs
-      - .github/workflows/wine-matching-live.yml
 permissions:
   contents: read
 jobs:
