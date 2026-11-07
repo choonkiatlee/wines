@@ -1,8 +1,8 @@
 /** Browser-only presentation state for candidate review. No provider or ranking logic. */
 import type { AlgoliaWineProfile } from '../../../packages/vivino-client/src/types.ts';
-import type { WineEnrichmentRow } from '../../../src/enrichment.ts';
+import type { WineEnrichmentRow, EnrichedWineProfile } from '../../../src/enrichment.ts';
 
-export type FullWineRow = WineEnrichmentRow<AlgoliaWineProfile>;
+export type FullWineRow = WineEnrichmentRow<EnrichedWineProfile>;
 export type Selection = { index: number | null; chosen: boolean };
 export type WineRatingView = {
   average: number;

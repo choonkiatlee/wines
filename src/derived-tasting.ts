@@ -3,7 +3,8 @@ export type WineDerived = { tastingNotes: string | null };
 
 const EVIDENCE: ReadonlyArray<readonly [RegExp, number]> = [
   [/\b(aromas?|bouquet|nose|palate|tasting notes?|scents?|smells?|flavo[u]?rs?|notes of|hints of|tastes? of)\b/i, 5],
-  [/\b(tannins?|acidity|mouthfeel|texture|body|bodied|finish|aftertaste|length)\b/i, 3],
+  [/\b(tannins?|acidity|mouthfeel|texture|body|bodied)\b/i, 3],
+  [/\b(finish|aftertaste|length)\b/i, 3],
   [/\b(cherr(?:y|ies)|raspberr(?:y|ies)|strawberr(?:y|ies)|blackberr(?:y|ies)|plum|peach|apricot|pear|apple|citrus|lemon|lime|orange|grapefruit|fig|currant|melon|tropical fruit|stone fruit|red fruit|dark fruit)\b/i, 2],
   [/\b(violet|rose petals?|jasmine|lavender|floral|herbal|herbs?|thyme|mint|basil|flowers?)\b/i, 2],
   [/\b(spic(?:e|es|y)|pepper|vanilla|cedar|tobacco|leather|chocolate|coffee|smoky|smoke|earthy|savoury|savory|mineral(?:ity)?|saline|flint(?:y)?)\b/i, 2],
