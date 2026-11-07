@@ -255,3 +255,8 @@ footer { margin-top: 44px; color: #989187; font-size: .78rem; line-height: 1.6; 
   .notes-toggle { flex: 1 1 100%; }
   .notes-cell { min-width: 215px; }
 }
+
+.notes-kind { display: block; margin-top: 7px; color: #999087; font-size: .7rem; line-height: 1.35; }
+.derived-notes { color: #55443d; font-size: .93rem; line-height: 1.65; white-space: pre-line;
+  margin: 8px 0 0; padding-left: 13px; border-left: 2px solid #bc9a90; }
+.full-description-heading { margin-top: 23px; }

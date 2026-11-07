@@ -1,6 +1,8 @@
 /** Candidate retrieval and enrichment, not automatic wine identification. */
 import { VivinoAlgoliaClient } from '../packages/vivino-client/src/algolia-client.ts';
 import type { AlgoliaWineProfile, Wine } from '../packages/vivino-client/src/types.ts';
+import { deriveTastingNotes } from './derived-tasting.ts';
+import type { WineDerived } from './derived-tasting.ts';
 
 /** Wine category as printed on a restaurant menu; absent means no category restriction. */
 export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'dessert' | 'fortified';
@@ -17,11 +19,15 @@ export type WineEnrichmentInput = {
   menuPrice?: number;
   metadata?: WineMenuMetadata;
 };
+/** Full provider profile enriched with deterministic notes; provider package is unchanged. */
+export type EnrichedWineProfile = AlgoliaWineProfile & { derived: WineDerived };
+
 export type CompactWineMatch = {
   name: string;
   year: number | null;
   rating: { score: number; count: number | null; scope: 'vintage' | 'overall' } | null;
   description: string | null;
+  derived: WineDerived;
   url: string | null;
 };
 export type WineEnrichmentRow<T> = { matches: T[]; error?: 'upstream_unavailable' };
@@ -283,7 +289,7 @@ function shortDescription(description: string | null): string | null {
   const boundary = slice.lastIndexOf(' ');
   return (boundary >= 160 ? slice.slice(0, boundary) : slice) + '…';
 }
-function compact(profile: AlgoliaWineProfile): CompactWineMatch {
+function compact(profile: EnrichedWineProfile): CompactWineMatch {
   const vintage = profile.ratings.vintage;
   const rating = vintage ?? profile.ratings.allVintages;
   const winery = profile.wine.winery;
@@ -293,7 +299,8 @@ function compact(profile: AlgoliaWineProfile): CompactWineMatch {
   return {
     name, year: profile.vintage?.year ?? null,
     rating: rating ? { score: rating.average, count: rating.count, scope: vintage ? 'vintage' : 'overall' } : null,
-    description: shortDescription(profile.description?.text ?? null), url: profile.sourceUrl ?? null,
+    description: shortDescription(profile.description?.text ?? null), derived: profile.derived,
+    url: profile.sourceUrl ?? null,
   };
 }
 function vintageMissing(error: unknown, year: number): boolean {
@@ -301,10 +308,10 @@ function vintageMissing(error: unknown, year: number): boolean {
     error.message.startsWith(`Ambiguous ${year} vintage`));
 }
 
-export function enrichWines(inputs: readonly WineEnrichmentInput[], options: WineEnrichmentOptions & { returnAll: true }): Promise<WineEnrichmentRow<AlgoliaWineProfile>[]>;
+export function enrichWines(inputs: readonly WineEnrichmentInput[], options: WineEnrichmentOptions & { returnAll: true }): Promise<WineEnrichmentRow<EnrichedWineProfile>[]>;
 export function enrichWines(inputs: readonly WineEnrichmentInput[], options?: WineEnrichmentOptions & { returnAll?: false }): Promise<WineEnrichmentRow<CompactWineMatch>[]>;
-export function enrichWines(inputs: readonly WineEnrichmentInput[], options: WineEnrichmentOptions): Promise<WineEnrichmentRow<CompactWineMatch | AlgoliaWineProfile>[]>;
-export async function enrichWines(inputs: readonly WineEnrichmentInput[], options: WineEnrichmentOptions = {}): Promise<WineEnrichmentRow<CompactWineMatch | AlgoliaWineProfile>[]> {
+export function enrichWines(inputs: readonly WineEnrichmentInput[], options: WineEnrichmentOptions): Promise<WineEnrichmentRow<CompactWineMatch | EnrichedWineProfile>[]>;
+export async function enrichWines(inputs: readonly WineEnrichmentInput[], options: WineEnrichmentOptions = {}): Promise<WineEnrichmentRow<CompactWineMatch | EnrichedWineProfile>[]> {
   const concurrency = options.concurrency ?? 4;
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 16) throw new RangeError('concurrency must be 1..16');
   for (const input of inputs) {
@@ -367,7 +374,12 @@ export async function enrichWines(inputs: readonly WineEnrichmentInput[], option
       return null;
     })));
     const matches = profilesByRank.filter((p): p is AlgoliaWineProfile => p !== null)
-      .map(p => options.returnAll ? p : compact(p));
+      .map(p => {
+        const enriched: EnrichedWineProfile = {
+          ...p, derived: { tastingNotes: deriveTastingNotes(p.description?.text) },
+        };
+        return options.returnAll ? enriched : compact(enriched);
+      });
     return { matches, ...(failed ? { error: 'upstream_unavailable' as const } : {}) };
   }));
 }

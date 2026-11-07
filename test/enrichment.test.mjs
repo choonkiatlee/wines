@@ -173,3 +173,29 @@ test('invalid input and concurrency reject before provider requests', async () =
   await assert.rejects(() => enrichWines([], { client, concurrency: 0 }), /concurrency/);
   assert.deepEqual(calls.search, []);
 });
+
+test('derived tasting notes are returned in compact and full enrichment without rewriting source descriptions', async () => {
+  const target = wine(90, 'Estate Reserve', 'Estate Reserve');
+  const description = 'The estate was founded in 1890 and is located on limestone soils. ' +
+    'Aromas of black cherry, violet and spice. Silky tannins lead to a long, savoury finish.';
+  const { client } = provider([target], {
+    overall: async () => profile(target, null, { description }),
+  });
+  const [compactRow] = await enrichWines([{ name: 'Estate Reserve' }], { client });
+  const [fullRow] = await enrichWines([{ name: 'Estate Reserve' }], { client, returnAll: true });
+  const expected = 'Aromas of black cherry, violet and spice. Silky tannins lead to a long, savoury finish.';
+  assert.deepEqual(compactRow.matches[0].derived, { tastingNotes: expected });
+  assert.deepEqual(fullRow.matches[0].derived, { tastingNotes: expected });
+  assert.equal(fullRow.matches[0].description.text, description);
+});
+
+test('source material without sensory evidence returns null derived notes in both modes', async () => {
+  const target = wine(91, 'Estate Reserve', 'Estate Reserve');
+  const { client } = provider([target], {
+    overall: async () => profile(target, null, { description: 'Founded in 1880. Our vineyard has limestone soils and a century of family heritage.' }),
+  });
+  const [compact] = await enrichWines([{ name: 'Estate Reserve' }], { client });
+  const [full] = await enrichWines([{ name: 'Estate Reserve' }], { client, returnAll: true });
+  assert.equal(compact.matches[0].derived.tastingNotes, null);
+  assert.equal(full.matches[0].derived.tastingNotes, null);
+});

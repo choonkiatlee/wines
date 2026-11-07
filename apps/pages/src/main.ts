@@ -192,9 +192,15 @@ function renderTable(): void {
     compactRating(ratingCell, profile);
     if (showNotes) {
       const noteCell = appendCell(tr, 'notes-cell');
-      const excerpt = shortWineNote(profile?.description?.text);
-      noteCell.append(element('span', excerpt ? 'notes-excerpt' : 'muted',
-        excerpt ?? 'No description available'));
+      const tasting = profile?.derived.tastingNotes;
+      const excerpt = shortWineNote(tasting ?? profile?.description?.text);
+      if (excerpt) {
+        noteCell.append(element('span', 'notes-excerpt', excerpt));
+        noteCell.append(element('span', 'notes-kind',
+          tasting ? 'Tasting note · source excerpt' : 'General description · source excerpt'));
+      } else {
+        noteCell.append(element('span', 'muted', 'No description available'));
+      }
     }
     const actionCell = appendCell(tr, 'action-cell');
     actionCell.append(element('span', 'row-arrow', '›'));
@@ -258,7 +264,13 @@ function renderDetail(): void {
     dialogContent.append(hero);
 
     const info = element('section', 'detail-info');
-    info.append(element('h4', 'detail-subheading', 'Full wine description'));
+    if (profile.derived.tastingNotes) {
+      info.append(element('h4', 'detail-subheading', 'Selected tasting notes'));
+      info.append(element('p', 'derived-notes', profile.derived.tastingNotes));
+      info.append(element('p', 'scope-note',
+        'Extracted from Vivino’s wine description using text rules; not a separate review or vintage-specific tasting note.'));
+    }
+    info.append(element('h4', 'detail-subheading full-description-heading', 'Full wine description'));
     if (profile.description?.text) {
       info.append(element('p', 'description', profile.description.text));
       info.append(element('p', 'scope-note', 'Source: Vivino wine-level description; not necessarily vintage-specific.'));
