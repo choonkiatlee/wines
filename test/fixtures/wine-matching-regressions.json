@@ -679,6 +679,35 @@
       ],
       "reason": "Cannot verify whether Camina is an alias of Caminada; do not assert no-match without confirming",
       "source": "Vivino Algolia 2026-11-07; identity unresolved"
+    },
+    {
+      "id": "wanderer-only-wrong-hits",
+      "input": {
+        "name": "The Wanderer After Dark Malbec",
+        "type": "red"
+      },
+      "expected": {
+        "empty": true
+      },
+      "verified": true,
+      "live": false,
+      "reason": "If the correct Wanderer wine is missing from retrieved hits, abstain rather than return unrelated Dark Malbecs; synthetic retrieval-omission case using actual wrong hits",
+      "source": "Vivino Algolia 2026-11-06 wrong candidates; retrieval omission simulated",
+      "candidates": [
+        {
+          "id": 3383528,
+          "name": "Malbec",
+          "winery": "Tall Dark Stranger",
+          "region": "Mendoza",
+          "type_id": 1
+        },
+        {
+          "id": 5944115,
+          "name": "Murder In The Dark Malbec",
+          "winery": "Dream Bird",
+          "type_id": 1
+        }
+      ]
     }
   ]
 }
