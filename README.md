@@ -159,3 +159,33 @@ unavailable. Opening a wine's detail card always shows the **complete source
 description** (or an explicit unavailable message), without truncation.
 Changing candidate updates its row's note. No changes to the standalone
 Vivino client, matching algorithm, or compact API response.
+
+## Rule-based tasting-note extraction
+
+`enrichWines()` now returns `derived: { tastingNotes: string | null }` on
+**each compact match** and **each full `returnAll: true` match**. Example:
+
+```json
+{
+  "name": "Example Wine",
+  "description": "A family-owned estate. Aromas of black cherry and violet. Silky tannins and a long finish.",
+  "derived": {
+    "tastingNotes": "Aromas of black cherry and violet. Silky tannins and a long finish."
+  }
+}
+```
+
+This is a deterministic, source-faithful **sentence selection** from Vivino's
+original `description.text`, using sensory-word and tasting-phrase rules with
+penalties for winery history, vineyard and winemaking background. It does
+**not** invent flavours, paraphrase, or invoke any LLM. A null `tastingNotes`
+indicates insufficient source sensory evidence. Negations remain part of the
+source sentence. The complete original description remains untouched in full
+profiles; compact `description` retains its existing shortened behaviour.
+
+`packages/vivino-client` remains standalone and returns only provider data.
+The extractor is `src/derived-tasting.ts`. The Pages wine-notes column prefers
+`derived.tastingNotes`, falls back to a normal source-description excerpt
+where no notes were detected, and always shows the original full description
+in the detail card. Rule-based extraction is an aid to scanning, not a verified
+sensory analysis; classification can be imperfect.
