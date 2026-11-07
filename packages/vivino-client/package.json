@@ -9,5 +9,11 @@
   },
   "engines": {
     "node": ">=22.16"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }
