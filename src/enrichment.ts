@@ -166,6 +166,12 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
   const producerAnchor = winery.some(word => similar(query[0], word)) ? 45
     : winery.some(word => similar(query[1] ?? '', word)) ? 25 : 0;
   const relevantHits = overlap(query, [...name, ...winery]);
+  // A long input with neither an early producer anchor nor a substantially
+  // matching wine name should abstain. Shared grape/marketing words alone
+  // are not evidence for substituting another producer.
+  const earlyProducer = overlap(query.slice(0, 3), winery) > 0;
+  const nameIdentity = overlap(query, name) >= Math.ceil(query.length * 0.75);
+  if (query.length >= 3 && !earlyProducer && !nameIdentity) return null;
   const hits = overlap(query, [...name, ...winery, ...region]);
   const threshold = Math.max(1, Math.ceil(query.length * 0.5));
   const cuvee = cuveeTokens(query, winery);
