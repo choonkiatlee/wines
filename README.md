@@ -44,6 +44,51 @@ The inspected index records do not contain review text, numeric acidity/tannin/b
 
 Algolia credentials are Vivino's publicly embedded application ID/search-only key and `WINES_prod` index, not MCP credentials. They remain internal to the concrete client; no caller credentials, generic resolver or configuration layer is required. An optional injected `fetch` supports tests and caller-controlled request policies. No retries are performed after HTTP errors.
 
+## Producer statistics (same Algolia wine record)
+
+The `VivinoAlgoliaClient` now exposes producer information already embedded in
+each wine's indexed `winery` object. The **full** `getProfile()` and
+`getProfileForYear()` responses include a normalized `winery` summary with
+`id`, `name`, `ratingAverage`, `ratingCount`, and `winesCount` (nullable).
+The rating is **Vivino's own producer average** across its reviews, **not** a
+new average computed from a sample of wines. No additional request is made to
+include these fields in an existing wine profile.
+
+```ts
+const wine = await vivino.getProfile(1100125);
+console.log(wine.winery);
+// e.g. { id: 2606, name: 'G.D. Vajra',
+//   ratingAverage: 4.0, ratingCount: 162821, winesCount: 28 }
+
+// Standalone helper when all you want is the winery data for a known wine:
+const winery = await vivino.getWineryStats(1100125); // 1 indexed wine GET
+
+// Opt-in: retrieve *individual wines* of that producer by exact winery ID.
+const page = await vivino.listWineryWines(2606, 0, 100);
+const top = page.wines
+  .filter(w => w.statistics?.status === 'Normal' &&
+    (w.statistics?.ratings_count ?? 0) >= 20)
+  .sort((a, b) =>
+    (b.statistics?.ratings_average ?? 0) - (a.statistics?.ratings_average ?? 0));
+```
+
+`listWineryWines(wineryId, page = 0, limit = 100)` uses Algolia's
+`numericFilters: ['winery.id=…']`; it returns `{ wineryId, page, total,
+pages, wines }`. The filter was live-verified on 7 November 2026 for G.D. Vajra
+(ID 2606): exactly 28 producer-owned wines. Fetch additional pages explicitly
+before calculating a catalog-wide highest rating; do not assume the first
+page covers all wines. Rating counts should be considered when comparing wines.
+`getWineryStats` requires a *wine ID*, while `listWineryWines` requires
+a *winery ID*.
+
+**Pages UI:** The results table and full-screen wine detail view show producer
+rating, rating count and catalog size alongside the wine-level rating when
+available. They use `profile.winery` from the **existing** `enrichWines({
+returnAll: true })` flow. Opening a wine, switching a candidate and displaying
+producer data do not call `getWineryStats` or `listWineryWines`. Unknown
+upstream fields are omitted, not zero-filled. The compact enrichment response
+remains unchanged.
+
 ## Multi-candidate menu enrichment
 
 `enrichWines` wraps the primary Algolia client with candidate search, lightweight ranking, and exact-vintage/overall rating fallback. It returns 0–3 candidates for each input (in the original order), leaving final menu identification to the external LLM.
