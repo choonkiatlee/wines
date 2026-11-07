@@ -1,0 +1,38 @@
+name: Wine matching regression and live Vivino check
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/wine-match-regressions-14]
+    paths:
+      - src/enrichment.ts
+      - test/fixtures/wine-matching-regressions.json
+      - test/lib/wine-matching-cases.mjs
+      - test/wine-matching-regressions.test.mjs
+      - scripts/benchmark-wine-matching.mjs
+      - .github/workflows/wine-matching-live.yml
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Offline tests
+        run: npm test
+      - name: Live Vivino regression benchmark
+        run: node --experimental-strip-types scripts/benchmark-wine-matching.mjs
+      - name: Preserve live report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wine-matching-live-results
+          path: wine-matching-live-results.json
+          if-no-files-found: warn
