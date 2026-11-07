@@ -31,7 +31,7 @@ let inputs: WineEnrichmentInput[] = [];
 let rows: FullWineRow[] = [];
 let choices: Selection[] = [];
 let activeRow: number | null = null;
-let lastTrigger: HTMLElement | null = null;
+let lastRowIndex: number | null = null;
 
 function setBusy(busy: boolean): void {
   enrichButton.disabled = busy;
@@ -145,7 +145,7 @@ function renderTable(): void {
     const chosen = choices[i];
     const profile = selectedProfile(row, chosen);
     const tr = element('tr', 'wine-row' + (chosen.chosen ? ' reviewed-row' : ''));
-    tr.addEventListener('click', () => openDetail(i, tr.querySelector('button')));
+    tr.addEventListener('click', () => openDetail(i));
     const menuCell = appendCell(tr, 'menu-cell');
     menuCell.append(element('strong', 'menu-name', inputs[i].name));
     const inputMeta = [inputs[i].year, inputs[i].type].filter(v => v !== undefined).join(' · ');
@@ -330,10 +330,10 @@ function renderDetail(): void {
   dialogContent.append(section);
 }
 
-function openDetail(rowIndex: number, trigger: Element | null): void {
+function openDetail(rowIndex: number): void {
   if (rowIndex < 0 || rowIndex >= rows.length) return;
   activeRow = rowIndex;
-  lastTrigger = trigger instanceof HTMLElement ? trigger : null;
+  lastRowIndex = rowIndex;
   renderDetail();
   if (!dialog.open) dialog.showModal();
   dialogClose.focus();
@@ -345,15 +345,11 @@ dialog.addEventListener('click', event => {
 });
 dialog.addEventListener('close', () => {
   activeRow = null;
-  // After a candidate change the original row button has been replaced.
-  // Focus its new button, rather than a now-detached element.
-  if (lastTrigger) {
-    const rowIndex = Array.from(resultsBody.querySelectorAll('tr')).findIndex(tr =>
-      tr.contains(lastTrigger));
-    const focusTarget = rowIndex >= 0 ? resultsBody.querySelectorAll('tr')[rowIndex].querySelector('button') : null;
-    (focusTarget ?? resultsBody.querySelector('button'))?.focus();
+  // Table rows are replaced when a selection changes; restore focus by row index.
+  if (lastRowIndex !== null) {
+    resultsBody.querySelectorAll('tr')[lastRowIndex]?.querySelector('button')?.focus();
   }
-  lastTrigger = null;
+  lastRowIndex = null;
 });
 
 form.addEventListener('submit', async event => {
