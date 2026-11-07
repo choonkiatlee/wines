@@ -4,7 +4,7 @@ import * as api from '../src/index.ts';
 
 const sample = () => ({ id: 1911534, name: 'Opus One', winery: { name: 'Opus One' },
   region: { name: 'Napa Valley', country: 'us' }, description: 'Dark fruit with velvety tannins.', alcohol: 14.5,
-  closure: 'cork', style_id: 289, grapes: [2], foods: [4, 8], non_vintage: false,
+  closure: 'cork', style_id: 289, type_id: 1, grapes: [2], foods: [4, 8], non_vintage: false,
   image: { location: '//images.vivino.com/example.png' }, updated_at: '2023-05-15T12:32:29Z',
   statistics: { status: 'Normal', ratings_average: 4.6, ratings_count: 97125 },
   vintages: [{ id: 170415755, year: '2022', statistics: { status: 'Normal', ratings_average: 4.5, ratings_count: 513, reviews_count: 140 } },
@@ -38,6 +38,7 @@ test('exact-year profile needs just one indexed lookup and preserves scope and p
   assert.deepEqual(p.wine.grapeIds, [2]);
   assert.deepEqual(p.wine.foodIds, [4, 8]);
   assert.equal(p.wine.styleId, 289);
+  assert.equal(p.wine.typeId, 1);
   assert.equal(p.wine.imageUrl, 'https://images.vivino.com/example.png');
   assert.equal(p.source, 'vivino-algolia');
   assert.ok(Number.isFinite(Date.parse(p.retrievedAt)));
@@ -89,6 +90,7 @@ test('missing metadata and counts remain null, rather than fabricated zeroes', a
   assert.equal(p.description, null);
   assert.equal(p.wine.country, null);
   assert.equal(p.wine.grapeIds, null);
+  assert.equal(p.wine.typeId, null);
   assert.equal(p.ratings.vintage.count, null);
   assert.equal(p.ratings.vintage.reviewsCount, null);
   assert.equal(p.ratings.allVintages, null);

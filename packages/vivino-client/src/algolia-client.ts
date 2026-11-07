@@ -60,6 +60,7 @@ function profile(w: Wine, v?: IndexedVintage): AlgoliaWineProfile {
       country: text(typeof w.region?.country === 'string' ? w.region.country : w.region?.country?.code),
       alcohol: numeric(w.alcohol), closure: text(w.closure), nonVintage: typeof w.non_vintage === 'boolean' ? w.non_vintage : null,
       grapeIds: ids(w.grapes), foodIds: ids(w.foods), styleId: count(w.style_id),
+      typeId: count(w.type_id),
       imageUrl: image?.startsWith('//') ? 'https:' + image : image },
     vintage: v ? { id: v.id, year: Number(v.year) } : null,
     ratings: { vintage: vintageRating, allVintages },
