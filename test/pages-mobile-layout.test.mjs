@@ -34,3 +34,12 @@ test('mobile detail is native full-screen dialog with sticky header and safe are
   assert.match(js, /dialog\.showModal\(\)/);
   assert.match(js, /dialogClose\.focus\(\)/);
 });
+
+test('producer rating is shown in both table and detail without on-open API calls', () => {
+  assert.match(js, /producerRatingLine\(profile\)/);
+  assert.match(js, /producerInTable/);
+  assert.match(js, /producerInDetail/);
+  assert.doesNotMatch(js, /\.getWineryStats\(|\.listWineryWines\(/);
+  assert.match(css, /\.producer-caption/);
+  assert.match(css, /\.producer-rating-summary/);
+});
