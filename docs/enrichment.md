@@ -26,9 +26,9 @@ const full = await enrichWines(inputs, { returnAll: true });
 
 ## Retrieval and ranking
 
-One full-name Algolia search (15 hits) starts each row. When the candidate set is insufficient, try up to three distinct follow-up queries: accent/punctuation-folded, first and last informative tokens for longer labels, and a shortened prefix of informative tokens. Search results are deduplicated by wine ID. All queries within a batch share an in-flight promise cache. For longer labels, three superficial hits do not stop retrieval unless at least one result has both an early producer match and a matching final name token.
+One full-name Algolia search (15 hits) starts each row. The matcher now builds bounded alternate queries from the original and packaging-cleaned label: bottle sizes, retail colour/wine descriptors, `Taste the Difference`, and `non-vintage` are removed only for search and identity comparison, **not** from the caller's input. Distinctive cuvée words such as `After Dark`, `Reserve` and `Special` are retained. Narrow producer-scoped aliases (currently Veuve Clicquot Yellow Label / Carte Jaune) may add a search query; none are universal translations. At most six distinct queries are attempted, with an early stop only after strong identity evidence. Searches are cached within the batch and results deduplicated by Vivino wine ID.
 
-A deterministic score rewards informative token coverage in the indexed wine name, winery and region; exact name agreement; and indexed availability of the requested vintage as a small tiebreaker. Generic particles and labels (such as *château*, *domaine* and *cuvée*) are ignored. Long tokens allow one edit or adjacent transposition. Adjacent words may match one indexed word, e.g. `Crazy Lud` ↔ `Crazylud` and `Pom Pon` ↔ `Pompon`.
+A deterministic score rewards wine-name/cuvée coverage, early winery identity, and an exact normalized wine-name match. Generic stopwords are discounted; small typos and joined/split spellings remain supported. Ranking filters explicitly conflicting indexed wine types, unrelated producers with only partial brand-token overlap, and non-rosé named Champagnes incorrectly matched to rosé cuvées. If strong full wine-name evidence exists, a different producer missing that distinctive name is filtered out; weak candidates can be rejected rather than filling three slots. No ratings/popularity signal is used for selecting identity.
 
 **Producer/cuvée evidence is handled separately.** Indexed winery tokens locate the producer portion of the search phrase; the remaining distinctive words are treated as the requested cuvée. A winery match at the start of the input (or after one leading alias word) receives a substantial rank bonus, so an unrelated winery with a word such as *Dark* is not treated as equally good producer evidence. For long bottle-label strings only, explicit early-producer + wine-name evidence can relax the overall token-coverage threshold. A candidate that matches only the producer but **none** of those cuvée words is filtered out. Partial cuvée overlap remains eligible, with a ranking penalty for unmatched terms, so related numbered or regional variants can still appear. Producer aliases before the winery token are supported (e.g. `Oszkár Maurer Krisztus` where the index calls the winery `Maurer`). If no winery token is recognizable, the matcher retains the permissive full-name fallback rather than inventing a split. Top three are chosen before enrichment, identically in compact/full modes.
 
@@ -102,3 +102,24 @@ The description is invented for illustration; 2022 rating and count are from the
 ```
 
 The full JSON is a *shape example*, not a fresh provider response. Nullable metadata, retrieval timestamp and description are illustrative; any real output is returned as normalized by the client.
+
+
+## Accumulating wine-identity regression tests (issue #14)
+
+The **append-only curated golden corpus** is `test/fixtures/wine-matching-regressions.json`. `npm test` runs `test/wine-matching-regressions.test.mjs` in addition to the existing unit tests. It mocks **real indexed candidate shapes** and asserts wine IDs via `enrichWines(..., {client,returnAll:true})`. The optional `searchResults` query map in a case can verify fallback search variants. This is deterministic, offline and part of ordinary CI.
+
+To record a new failure:
+1. Identify the correct **Vivino wine ID** from independent producer/cuvée evidence; don't assume a top Algolia hit is correct. Record original input, `expected.topId` and/or `mustIncludeIds`, `mustExcludeIds`, or `empty`, plus `reason` and `source`.
+2. Add a minimal frozen `candidates` list (IDs, names, wineries, `type_id` and optional region/vintages) and optionally `searchResults` for a specific retrieval problem.
+3. Mark `verified:true` only after identity verification. Use `verified:false` for a pending example, which will be kept in the fixture but excluded from hard assertions and live scoring.
+4. Run `npm test`; reproduce the failure before changing the matcher and retain the case afterwards. Never rewrite expected IDs from a changing live response.
+
+**Opt-in live check** (real Vivino Algolia; does not rewrite fixtures):
+
+```sh
+node --experimental-strip-types scripts/benchmark-wine-matching.mjs
+```
+
+It reads the same verified inputs and writes `wine-matching-live-results.json` with row-by-row IDs, failures, Top-1, Recall@3, and upstream search/profile call counts. The GitHub Actions `Wine matching regression and live Vivino check` workflow can also be run manually (or on the implementation branch during development). Live failures are reported, not used to silently update ground truth. Before merging matcher changes, require green offline tests and a reviewed live report; if upstream is unavailable, report the blocker.
+
+**Scope:** the API remains `{name, year?, type?} -> {matches:[...]}`; the caller/LLM remains responsible for final identity selection. This is not a catalogue or retailer scraper.
