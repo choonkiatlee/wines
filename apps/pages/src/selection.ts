@@ -35,7 +35,7 @@ export function chooseCandidate(
 export function selectedProfile(
   row: FullWineRow,
   choice: Selection,
-): AlgoliaWineProfile | null {
+): EnrichedWineProfile | null {
   return choice.index === null ? null : row.matches[choice.index] ?? null;
 }
 
