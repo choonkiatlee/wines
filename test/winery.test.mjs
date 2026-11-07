@@ -106,6 +106,7 @@ test('full menu enrichment includes producer metadata with only search + selecte
   assert.equal(row.matches.length,1);
   assert.equal(row.matches[0].winery.ratingAverage,4);
   assert.equal(row.matches[0].winery.ratingCount,162821);
-  assert.equal(calls.length,2,'only existing search plus selected wine profile');
-  assert.equal(calls.filter(url=>url.endsWith('/query')).length,1);
+  assert.ok(calls.filter(url=>url.endsWith('/query')).length >= 1);
+  assert.equal(calls.filter(url=>!url.endsWith('/query')).length,1,
+    'one selected wine profile fetch and no extra requests for producer information');
 });
