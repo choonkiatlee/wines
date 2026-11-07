@@ -222,9 +222,10 @@ function rank(input: WineEnrichmentInput, candidates: Wine[]): Wine[] {
       !(candidateName.includes('carte') && candidateName.includes('jaune'))) return false;
     // Once the leading winery has been identified, another producer sharing
     // the grape or a marketing token is not a useful alternative.
-    if (top && top.id !== wine.id && overlap(query.slice(0, 2), topWinery) > 0 &&
-      overlap(topWinery, significant(wine.winery?.name ?? '')) === 0 &&
-      overlap(query.slice(0, 2), significant(wine.winery?.name ?? '')) === 0) return false;
+    const producerWords = Math.min(2, topWinery.length);
+    if (top && top.id !== wine.id && producerWords > 0 &&
+      overlap(query.slice(0, 2), topWinery) >= producerWords &&
+      overlap(topWinery, significant(wine.winery?.name ?? '')) < producerWords) return false;
     // Strong full-name evidence should outrank, and exclude, a wrong producer
     // that shares the region/grape but misses the distinctive wine-name phrase.
     if (veryStrongName && wine.id !== top!.id &&
