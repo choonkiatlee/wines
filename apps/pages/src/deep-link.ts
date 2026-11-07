@@ -173,7 +173,12 @@ export async function readWineLink(hash: string): Promise<ImportedWineLink | nul
     if (typeof DecompressionStream !== 'function') {
       throw new Error('This browser cannot open compressed wine links.');
     }
-    json = await gunzipBounded(base64UrlToBinary(compressed[0]));
+    try {
+      json = await gunzipBounded(base64UrlToBinary(compressed[0]));
+    } catch (error) {
+      if (error instanceof RangeError) throw error;
+      throw new Error('Invalid compressed wine-list payload.');
+    }
   }
   return { wines: parseWineInputs(json), autorun: flag[0] === 'true' };
 }
