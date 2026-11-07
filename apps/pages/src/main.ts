@@ -8,6 +8,7 @@ import type { FullWineRow, Selection } from './selection.ts';
 import { visibleRows, wineTypeFor, WINE_TYPE_LABELS } from './table-view.ts';
 import type { TypeFilter, SortKey } from './table-view.ts';
 import { createShareLink, parseWineInputs, readWineLink } from './deep-link.ts';
+import { shortWineNote } from './notes.ts';
 import './style.css';
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -25,6 +26,8 @@ const resultsCount = byId<HTMLElement>('results-count');
 const typeFilter = byId<HTMLSelectElement>('type-filter');
 const sortBy = byId<HTMLSelectElement>('sort-by');
 const resetTable = byId<HTMLButtonElement>('reset-table');
+const showNotesInput = byId<HTMLInputElement>('show-notes');
+const notesHeader = byId<HTMLTableCellElement>('notes-header');
 const enrichButton = byId<HTMLButtonElement>('enrich-button');
 const connectionButton = byId<HTMLButtonElement>('connection-button');
 const shareButton = byId<HTMLButtonElement>('share-button');
@@ -41,6 +44,7 @@ let activeRow: number | null = null;
 let lastRowIndex: number | null = null;
 let currentTypeFilter: TypeFilter = 'all';
 let currentSort: SortKey = 'rating-desc';
+let showNotes = false;
 
 function setBusy(busy: boolean): void {
   enrichButton.disabled = busy;
@@ -124,6 +128,7 @@ function appendCell(row: HTMLTableRowElement, className = ''): HTMLTableCellElem
 
 function renderTable(): void {
   resultsBody.replaceChildren();
+  notesHeader.hidden = !showNotes;
   const summary = selectionSummary(rows, choices);
   const shown = visibleRows(inputs, rows, choices, currentTypeFilter, currentSort);
   resultsCount.textContent = 'Showing ' + shown.length + ' of ' + summary.total +
@@ -133,7 +138,7 @@ function renderTable(): void {
   if (!shown.length) {
     const empty = element('tr');
     const td = appendCell(empty, 'empty');
-    td.colSpan = 4;
+    td.colSpan = showNotes ? 5 : 4;
     td.append(element('strong', '', 'No wines match this filter'));
     td.append(element('span', '', 'Try another type or clear the filters.'));
     resultsBody.append(empty);
@@ -185,6 +190,12 @@ function renderTable(): void {
     matchCell.append(button);
     const ratingCell = appendCell(tr, 'rating-cell');
     compactRating(ratingCell, profile);
+    if (showNotes) {
+      const noteCell = appendCell(tr, 'notes-cell');
+      const excerpt = shortWineNote(profile?.description?.text);
+      noteCell.append(element('span', excerpt ? 'notes-excerpt' : 'muted',
+        excerpt ?? 'No description available'));
+    }
     const actionCell = appendCell(tr, 'action-cell');
     actionCell.append(element('span', 'row-arrow', '›'));
     resultsBody.append(tr);
@@ -247,10 +258,12 @@ function renderDetail(): void {
     dialogContent.append(hero);
 
     const info = element('section', 'detail-info');
+    info.append(element('h4', 'detail-subheading', 'Full wine description'));
     if (profile.description?.text) {
-      info.append(element('h4', 'detail-subheading', 'About this wine'));
       info.append(element('p', 'description', profile.description.text));
-      info.append(element('p', 'scope-note', 'Source description is wine-level, not necessarily vintage-specific.'));
+      info.append(element('p', 'scope-note', 'Source: Vivino wine-level description; not necessarily vintage-specific.'));
+    } else {
+      info.append(element('p', 'description muted', 'No description available from Vivino for this wine.'));
     }
     const metadata = element('dl', 'metadata-grid');
     const selectedType = wineTypeFor(inputs[activeRow], row, choice);
@@ -481,3 +494,9 @@ void (async () => {
     inputDetails.open = true;
   }
 })();
+
+showNotesInput.addEventListener('change', () => {
+  showNotes = showNotesInput.checked;
+  if (rows.length) renderTable();
+  else notesHeader.hidden = !showNotes;
+});

@@ -148,3 +148,14 @@ const url = 'https://choonkiatlee.github.io/wines/#wines=' +
 `Copy share link` uses gzip/base64url compression (`#z=...`) when shorter; an LLM can construct `#wines=<URL-encoded JSON>` directly. Limits are 1–60 wines, 24 KB decoded input, 16,000-character incoming fragments and an 8,000-character share-link budget. Longer lists may need to be split. Never put private data into these shareable URL fragments. Existing links using `metadata.menuPrice` are **not** converted to the new field; regenerate them using top-level `menuPrice`.
 
 The website remains static and calls `enrichWines()` in the browser; the Vivino client and matching library do not use menu prices. Browser CORS restrictions and upstream request quotas still apply, especially for 60-wine lists.
+
+### Optional short descriptions in Pages
+
+The shortlist stays compact by default. A **Show short wine notes** checkbox adds
+a column with an up-to-132-character, word-boundary excerpt from Vivino's
+`description.text` for the currently selected candidate. These are source
+excerpts, not invented tasting profiles. Missing descriptions remain visibly
+unavailable. Opening a wine's detail card always shows the **complete source
+description** (or an explicit unavailable message), without truncation.
+Changing candidate updates its row's note. No changes to the standalone
+Vivino client, matching algorithm, or compact API response.

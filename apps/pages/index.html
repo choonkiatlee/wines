@@ -65,11 +65,15 @@
             <option value="type">Type: A–Z</option>
           </select>
         </label>
+        <label class="notes-toggle" for="show-notes">
+          <input id="show-notes" type="checkbox">
+          <span>Show short wine notes</span>
+        </label>
         <button type="button" id="reset-table" class="reset-table" hidden>Clear filters</button>
       </div>
       <div class="table-frame">
         <table class="wine-table">
-          <thead><tr><th scope="col">Your wine</th><th scope="col">Current match</th><th scope="col">Vivino rating</th><th scope="col"><span class="visually-hidden">Details</span></th></tr></thead>
+          <thead><tr><th scope="col">Your wine</th><th scope="col">Current match</th><th scope="col">Vivino rating</th><th scope="col" id="notes-header" hidden>Wine notes</th><th scope="col"><span class="visually-hidden">Details</span></th></tr></thead>
           <tbody id="results-body">
             <tr><td colspan="4" class="empty">
               <div class="empty-symbol" aria-hidden="true">◇</div>
