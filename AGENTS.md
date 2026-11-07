@@ -1,6 +1,6 @@
 # Agent instructions — wines
 
-These instructions apply to the entire repository. Read this before changing wine matching, the Vivino client, tests, or the Pages playground.
+These instructions describe the repository architecture and an **optional, user-triggered** failure-improvement procedure. The regression procedure below is **not a standing instruction for every task**.
 
 ## Scope and architecture
 
@@ -8,7 +8,17 @@ These instructions apply to the entire repository. Read this before changing win
 - Preserve `enrichWines([{ name, year?, type? }])` and the current compact output: up to three **candidate** matches containing canonical name, confirmed year/null, correctly scoped rating/null, description/null, URL/null. `returnAll: true` exposes normalized profiles. **Candidates are not verified identities**; the caller makes the final choice.
 - Prefer generic retrieval, normalization, producer/cuvée ranking, negative evidence, and abstention over one-off retailer rules. Do not introduce scraping, a catalogue-ingestion system, infrastructure, an LLM call, API fields, or provider dependencies unless explicitly requested. Keep test experiments small and throwaway.
 
-## Golden wine-matching regressions — mandatory for matcher changes
+## Failure-driven API improvement workflow — EXPLICIT OPT-IN ONLY
+
+**Trigger:** Use the following regression and live-validation workflow **only when the user explicitly instructs you to improve the wine-matching/enrichment API based on observed failed or incorrect matches** (for example, "improve the API using these failures", or "fix these wine-matching failures and add regression tests").
+
+**Otherwise do not automatically invoke this workflow.** In particular:
+- A request to look up wines, investigate results, diagnose a failure, test the client, create a UI, update documentation, or implement an unrelated feature **does not authorize** adding new golden cases, modifying ranking logic, running the live regression benchmark, creating an improvement PR, or merging to master under this procedure.
+- Do not automatically ingest menus, create permanent datasets, or turn every failed lookup into a regression case. Only do that when explicitly asked to improve matching from failures.
+- For other development tasks, follow the user's actual scope, and run appropriate ordinary tests; neither a live Vivino benchmark nor a squash-merge is automatically required by this file.
+- If the user requests only a plan or issue, stop at the requested deliverable; don't implement or merge the work.
+
+**Once explicitly invoked**, follow the remainder of this section and the validation section below.
 
 The permanent, curated regression data is `test/fixtures/wine-matching-regressions.json`; the generic runner is `test/wine-matching-regressions.test.mjs`, using `test/lib/wine-matching-cases.mjs`.
 
@@ -35,17 +45,17 @@ Illustrative fixture case (the existing file contains the full schema and exampl
 }
 ```
 
-## Validation and live Vivino gate before merging matcher changes
+## Validation and live Vivino check — only within the explicitly invoked workflow
 
-1. Develop on a feature branch and open a PR against `master` that links the issue and describes the corrected/wrong matches.
+1. If the user requested implementation, develop on a feature branch and open a PR against `master` that links the issue and describes the corrected/wrong matches.
 2. Run `npm install --no-audit --no-fund`, `npm run typecheck`, `npm run typecheck -w @choonkiatlee/vivino-client`, and `npm test`. If Pages code or integration is affected, also run `npm run pages:build`. Fix all regressions rather than deleting cases.
-3. **Before merging a matcher change, run the live Vivino check** with the current branch's code. Use the manually dispatched GitHub Actions workflow `.github/workflows/wine-matching-live.yml` (workflow name **Wine matching regression and live Vivino check**), selecting the feature branch; alternatively run `node --experimental-strip-types scripts/benchmark-wine-matching.mjs` in an environment with working Vivino Algolia access. The live benchmark reads the same `verified: true` cases except those marked `live: false`, and produces `wine-matching-live-results.json`. **Never auto-update the golden fixture from live results.**
+3. **For this explicitly requested failure-improvement task, before merging, run the live Vivino check** with the current branch's code. Use the manually dispatched GitHub Actions workflow `.github/workflows/wine-matching-live.yml` (workflow name **Wine matching regression and live Vivino check**), selecting the feature branch; alternatively run `node --experimental-strip-types scripts/benchmark-wine-matching.mjs` in an environment with working Vivino Algolia access. The live benchmark reads the same `verified: true` cases except those marked `live: false`, and produces `wine-matching-live-results.json`. **Never auto-update the golden fixture from live results.**
 4. Review per-case observed/expected IDs, **Top-1, Recall@3, known-wrong hits, abstention, upstream errors and search/profile call counts** against the prior baseline. Link the actual Actions run and JSON artifact (or equivalent captured report) in the PR; report any remaining mismatches explicitly. The benchmark is a *pre-merge check*, not part of deterministic unit-test CI.
 5. If Vivino is blocked or unavailable, document the attempt and error. **Do not call the live gate passed** or merge solely on mocks; get an explicit decision to defer or accept an exception. Likewise, investigate any newly incorrect control before merging.
-6. When offline tests and live checks pass, **squash-merge the PR into `master`**, confirm the resulting master files/commit and resolve the issue. For documentation-only changes that do not affect matching, the live gate is not necessary.
+6. If the user authorized implementation through merge, when offline tests and live checks pass, **squash-merge the PR into `master`**, confirm the resulting master files/commit and resolve the issue. If the request was only to prepare a PR, leave it unmerged. The live gate is not required for documentation-only or otherwise unrelated changes.
 
 ## Reporting and hygiene
 
-- Report precisely: PR/merge link, test totals, live run URL, important fixed and still-uncertain cases, and whether the code actually reached `master`.
+- **When the opt-in failure-improvement workflow was requested**, report the PR/merge link, test totals, live run URL, fixed and still-uncertain cases, and whether code reached `master`. For other tasks, report only what is relevant to the user's request.
 - Keep raw experiments, transient workflow probes, generated live JSON, and retailer catalogue dumps out of `master` unless intentionally requested. Retain only reusable test fixtures, scripts, and documented commands.
 - Related details: `docs/enrichment.md`, `README.md`, and [issue #14](https://github.com/choonkiatlee/wines/issues/14).
