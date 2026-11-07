@@ -79,3 +79,42 @@ npm test
 Node 22.16+ is required. Tests are offline with mocked HTTP responses, including a guard that primary profiles never call `www.vivino.com`. No recurring live workflow is installed. These unofficial index and website schemas can change; live checks are separate from deterministic tests. Publicly embedded credentials alone do not establish data-reuse rights; access for this investigation was authorised by the user.
 
 Primary client live verification: [GitHub Actions, 4 November 2026](https://github.com/choonkiatlee/wines/actions/runs/41855364544) passed all five indexed requests (search, wine read, resolution, overall profile, exact-year profile) with HTTP 200 and no website calls. Opus One 2022 returned 4.5/513 ratings/140 reviews. The final fallback-count regression guard was verified offline afterward; the final local suite has 36 passing tests.
+
+
+## Standalone Vivino client and browser playground
+
+The Vivino provider is a **separate TypeScript subproject** in `packages/vivino-client/`.
+Its entry point is `packages/vivino-client/src/index.ts`, and it does not depend
+on the UI. The root `src/enrichment.ts` consumes the provider and contains
+wine-name matching/ranking logic. `src/index.ts` remains a compatibility
+entry point for existing scripts/tests. The static website lives entirely
+inside `apps/pages/`, which imports `enrichWines` and does no matching itself.
+
+```text
+packages/vivino-client/src/   # independent VivinoAlgoliaClient/VivinoClient
+src/                          # enrichment library + backwards-compatible exports
+apps/pages/                   # static, browser-only Vite playground
+.github/workflows/pages.yml   # build/test on PR; deploy on master
+```
+
+Local setup (Node >=22.16):
+
+```sh
+npm install
+npm run typecheck && npm test
+npm run pages:dev
+npm run pages:build
+```
+
+After merging the Pages workflow, go to **Settings → Pages → Build and
+deployment → Source → GitHub Actions**. The workflow publishes the `apps/pages/dist`
+bundle on changes to `master`. Expected site once configured:
+https://choonkiatlee.github.io/wines/
+
+This is **not a server-side JSON API**: the page executes the existing
+`enrichWines()` library inside a browser. Use **Check browser → Algolia**
+first to verify third-party CORS/preflight permissions; successful Node/Actions
+requests do not prove browser access. If blocked, the browser cannot work
+around CORS and a small server-side HTTP adapter would be necessary.
+The bundled search-only Algolia credentials are visible to page visitors.
+Provider reuse permissions, quotas, and availability remain separate concerns.

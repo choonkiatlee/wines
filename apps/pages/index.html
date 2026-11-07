@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f9f7f3">
+  <title>Wine enrichment · Browser playground</title>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <p class="eyebrow">Wines · proof of concept</p>
+      <h1>Browser enrichment playground</h1>
+      <p class="intro">Runs the existing TypeScript <code>enrichWines()</code> in your browser. GitHub Pages hosts static files only; live wine profiles come from Vivino Algolia, subject to its CORS policy and availability.</p>
+    </header>
+    <section class="panel" aria-labelledby="input-title">
+      <h2 id="input-title">Wine list (JSON)</h2>
+      <form id="enrich-form">
+        <label for="wines-input">Array of <code>{ name, year?, type? }</code>; no menu prices needed.</label>
+        <textarea id="wines-input" spellcheck="false" rows="9">[
+  { "name": "Opus One", "year": 2022, "type": "red" },
+  { "name": "G.D. Vajra Barbera d'Alba" }
+]</textarea>
+        <div class="actions">
+          <button id="enrich-button" type="submit">Enrich wines</button>
+          <button id="connection-button" type="button" class="secondary">Check browser → Algolia</button>
+        </div>
+      </form>
+      <p id="status" role="status" aria-live="polite">No live requests made yet.</p>
+    </section>
+    <section class="panel results" aria-labelledby="results-title">
+      <h2 id="results-title">Candidates</h2>
+      <p class="hint">Up to three plausible candidates per input. The caller must still decide the correct identity.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Input</th><th>Candidate</th><th>Rating</th><th>Description</th><th>Source</th></tr></thead>
+          <tbody id="results-body"><tr><td colspan="5" class="empty">Run enrichment to see results.</td></tr></tbody>
+        </table>
+      </div>
+      <details>
+        <summary>JSON response</summary>
+        <pre id="json-output">[]</pre>
+      </details>
+    </section>
+    <footer>Static test surface only — not an HTTP API. Uses the library unchanged; upstream credentials embedded in the client are public search-only credentials, not secrets.</footer>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

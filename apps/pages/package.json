@@ -1,0 +1,17 @@
+{
+  "name": "@choonkiatlee/wines-pages",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Static browser client consuming wines enrichment",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --base=/wines/"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=22.16"
+  }
+}

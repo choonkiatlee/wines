@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Small TypeScript adapter for Vivino-shaped HTTP data (offline-first tests)",
+  "description": "Wine matching and enrichment with standalone Vivino data client and Pages playground",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "test": "node --experimental-strip-types --test test/*.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pages:dev": "npm run dev -w @choonkiatlee/wines-pages",
+    "pages:build": "npm run build -w @choonkiatlee/wines-pages"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
   },
-  "engines": { "node": ">=22.16" }
+  "engines": {
+    "node": ">=22.16"
+  }
 }

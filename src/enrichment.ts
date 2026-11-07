@@ -1,6 +1,6 @@
 /** Candidate retrieval and enrichment, not automatic wine identification. */
-import { VivinoAlgoliaClient } from './algolia-client.ts';
-import type { AlgoliaWineProfile, Wine } from './types.ts';
+import { VivinoAlgoliaClient } from '../packages/vivino-client/src/algolia-client.ts';
+import type { AlgoliaWineProfile, Wine } from '../packages/vivino-client/src/types.ts';
 
 /** Wine category as printed on a restaurant menu; absent means no category restriction. */
 export type WineType = 'red' | 'white' | 'rose' | 'sparkling' | 'dessert' | 'fortified';
