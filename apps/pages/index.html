@@ -3,47 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f9f7f3">
-  <title>Wine enrichment · Browser playground</title>
+  <meta name="theme-color" content="#f8f7f4">
+  <title>Wine matches · Wines</title>
 </head>
 <body>
   <main class="shell">
-    <header>
-      <p class="eyebrow">Wines · proof of concept</p>
-      <h1>Browser enrichment playground</h1>
-      <p class="intro">Runs the existing TypeScript <code>enrichWines()</code> in your browser. GitHub Pages hosts static files only; live wine profiles come from Vivino Algolia, subject to its CORS policy and availability.</p>
+    <header class="site-head">
+      <div class="eyebrow"><span class="eyebrow-mark">W</span> Wines / Playground</div>
+      <h1>Find the right bottle<span class="period">.</span></h1>
+      <p class="intro">Explore live wine matches, inspect the bottle, and choose the right candidate. Your selection updates the table immediately.</p>
     </header>
-    <section class="panel" aria-labelledby="input-title">
-      <h2 id="input-title">Wine list (JSON)</h2>
-      <form id="enrich-form">
-        <label for="wines-input">Array of <code>{ name, year?, type? }</code>; no menu prices needed.</label>
-        <textarea id="wines-input" spellcheck="false" rows="9">[
+
+    <section class="editor-card" aria-label="Wine input">
+      <details id="input-details" open>
+        <summary><span class="summary-text">Wine list <span class="summary-subtext">JSON input</span></span><span class="summary-edit">Edit list <span aria-hidden="true">⌄</span></span></summary>
+        <form id="enrich-form">
+          <label for="wines-input">Paste an array of wine names with optional year and type.</label>
+          <textarea id="wines-input" spellcheck="false" rows="7">[
   { "name": "Opus One", "year": 2022, "type": "red" },
   { "name": "G.D. Vajra Barbera d'Alba" }
 ]</textarea>
-        <div class="actions">
-          <button id="enrich-button" type="submit">Enrich wines</button>
-          <button id="connection-button" type="button" class="secondary">Check browser → Algolia</button>
-        </div>
-      </form>
-      <p id="status" role="status" aria-live="polite">No live requests made yet.</p>
+          <div class="form-actions">
+            <button type="submit" id="enrich-button" class="button button-primary">Find matches <span aria-hidden="true">↗</span></button>
+            <button type="button" id="connection-button" class="button button-quiet">Test connection</button>
+          </div>
+        </form>
+      </details>
+      <p id="status" role="status" aria-live="polite" class="status">Enter a list, then find matches to explore them.</p>
     </section>
-    <section class="panel results" aria-labelledby="results-title">
-      <h2 id="results-title">Candidates</h2>
-      <p class="hint">Up to three plausible candidates per input. The caller must still decide the correct identity.</p>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>Input</th><th>Candidate</th><th>Rating</th><th>Description</th><th>Source</th></tr></thead>
-          <tbody id="results-body"><tr><td colspan="5" class="empty">Run enrichment to see results.</td></tr></tbody>
+
+    <section class="results-section" aria-labelledby="results-title">
+      <div class="results-heading">
+        <div>
+          <p class="eyebrow section-eyebrow">Your shortlist</p>
+          <h2 id="results-title">Wine matches</h2>
+          <p class="subcopy">One suggestion per wine. Open a row to compare alternatives and make your choice.</p>
+        </div>
+        <span id="results-count" class="count-pill">Not searched</span>
+      </div>
+      <div class="table-frame">
+        <table class="wine-table">
+          <thead><tr><th scope="col">Your wine</th><th scope="col">Current match</th><th scope="col">Vivino rating</th><th scope="col"><span class="visually-hidden">Details</span></th></tr></thead>
+          <tbody id="results-body">
+            <tr><td colspan="4" class="empty">
+              <div class="empty-symbol" aria-hidden="true">◇</div>
+              <strong>Ready when you are</strong>
+              <span>Run enrichment to see a compact shortlist here.</span>
+            </td></tr>
+          </tbody>
         </table>
       </div>
-      <details>
-        <summary>JSON response</summary>
-        <pre id="json-output">[]</pre>
-      </details>
+      <p class="below-table">Suggestions are ranked candidates, not verified identities. Confirm the producer and cuvée before relying on a match.</p>
     </section>
-    <footer>Static test surface only — not an HTTP API. Uses the library unchanged; upstream credentials embedded in the client are public search-only credentials, not secrets.</footer>
+    <footer>Powered by the standalone Vivino client · Runs in your browser on GitHub Pages · No server-side API</footer>
   </main>
+
+  <dialog id="wine-dialog" class="wine-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-wrap">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">Inspect match</p>
+          <h2 id="dialog-title">Wine details</h2>
+          <p id="dialog-subtitle" class="dialog-subtitle"></p>
+        </div>
+        <button type="button" id="dialog-close" class="icon-button" aria-label="Close wine details">✕</button>
+      </div>
+      <div id="dialog-content" class="dialog-content"></div>
+    </div>
+  </dialog>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
