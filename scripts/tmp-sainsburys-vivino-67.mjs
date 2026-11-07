@@ -52,3 +52,30 @@ const report={source:catalogue.sourceCategoryUrl,assembledOn:catalogue.assembled
 await writeFile('sainsburys-vivino-67-results.json',JSON.stringify(report,null,2));
 console.log('PROBE_SUMMARY',JSON.stringify({rows:rows.length,withCandidates:rows.filter(r=>r.candidates.length>0).length,noCandidates:rows.filter(r=>r.candidates.length===0).length,errorRows:rows.filter(r=>r.errors.normalized||r.errors.alternate).length}));
 for(const r of rows) console.log('PROBE_ROW',JSON.stringify({i:r.index,name:r.retailerName,type:r.type,inputs:r.inputs,errors:r.errors,candidates:r.candidates.map(c=>({rank:c.rank,variant:c.variant,name:c.name,score:c.score,count:c.count,url:c.url}))}));
+
+
+import { VivinoAlgoliaClient } from '../src/index.ts';
+const vivino = new VivinoAlgoliaClient();
+const unresolvedQueries = [
+  'Veuve Clicquot Yellow Label',
+  'Veuve Clicquot Brut',
+  'Sainsburys Prosecco',
+  "Sainsbury's Prosecco",
+  "Sainsbury's Portuguese Red",
+  "Sainsbury's Primitivo",
+  "Sainsbury's Gavi",
+  "Sainsbury's Cremant",
+  'Edizione 789 Famoso',
+  'Famoso Pinot Grigio',
+  "Sainsbury's Maipo Cabernet",
+  'Caminada Cabernet',
+  'Mondelli Pinot Grigio',
+  "Sainsbury's Lisboa",
+  "Sainsbury's Montepulciano",
+];
+for(const q of unresolvedQueries){
+  try {
+   const hits=await vivino.searchWines(q,20);
+   console.log('TARGETED_SEARCH',JSON.stringify({q,total:hits.total,candidates:hits.candidates.slice(0,20).map(w=>({name:w.name,winery:w.winery?.name??null,id:w.id,score:w.statistics?.status==='Normal'?w.statistics?.ratings_average??null:null,count:w.statistics?.ratings_count??null}))}));
+  }catch(error){console.log('TARGETED_ERROR',JSON.stringify({q,error:String(error)}))}
+}
