@@ -4,7 +4,7 @@ import type { FullWineRow, Selection } from './selection.ts';
 import { ratingFor, selectedProfile } from './selection.ts';
 
 export type TypeFilter = WineType | 'unknown' | 'all';
-export type SortKey = 'original' | 'rating-desc' | 'rating-asc' | 'type';
+export type SortKey = 'original' | 'rating-desc' | 'rating-asc' | 'price-asc' | 'price-desc' | 'type';
 
 export const WINE_TYPE_LABELS: Record<WineType, string> = {
   red: 'Red', white: 'White', rose: 'Rosé', sparkling: 'Sparkling',
@@ -19,6 +19,7 @@ export type VisibleRow = {
   index: number;
   type: WineType | 'unknown';
   rating: number | null;
+  price: number | null;
 };
 
 export function wineTypeFor(
@@ -49,11 +50,19 @@ export function visibleRows(
   const visible: VisibleRow[] = rows.map((row, index) => {
     const profile = selectedProfile(row, selections[index]);
     const score = profile ? ratingFor(profile)?.average ?? null : null;
-    return { index, type: wineTypeFor(inputs[index], row, selections[index]), rating: score };
+    return {
+      index, type: wineTypeFor(inputs[index], row, selections[index]), rating: score,
+      price: inputs[index].menuPrice ?? null,
+    };
   }).filter(entry => typeFilter === 'all' || entry.type === typeFilter);
 
   if (sort === 'original') return visible;
   return visible.sort((a, b) => {
+    if (sort === 'price-asc' || sort === 'price-desc') {
+      if (a.price === null) return b.price === null ? a.index - b.index : 1;
+      if (b.price === null) return -1;
+      return (sort === 'price-asc' ? a.price - b.price : b.price - a.price) || a.index - b.index;
+    }
     if (sort === 'type') {
       if (a.type === 'unknown' && b.type !== 'unknown') return 1;
       if (b.type === 'unknown' && a.type !== 'unknown') return -1;

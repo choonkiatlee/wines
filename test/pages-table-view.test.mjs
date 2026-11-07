@@ -13,10 +13,10 @@ function mock(id, typeId, score, name = 'Wine') {
 }
 
 const inputs = [
-  { name: 'Bordeaux' },
-  { name: 'White Wine' },
+  { name: 'Bordeaux', menuPrice: 80 },
+  { name: 'White Wine', menuPrice: 0 },
   { name: 'Unrated rosé' },
-  { name: 'Mystery wine' },
+  { name: 'Mystery wine', menuPrice: 40 },
   { name: 'Unknown wine', type: 'fortified' },
 ];
 const rows = [
@@ -72,4 +72,13 @@ test('unresolved choices and unknown indexed type are handled conservatively', (
 
 test('mismatched input/result arrays fail loudly', () => {
   assert.throws(() => visibleRows([], rows, initialSelections(rows), 'all', 'original'), RangeError);
+});
+
+test('menu price sort is numeric, independent of Vivino matches; missing prices always last', () => {
+  const initial = initialSelections(rows);
+  assert.deepEqual(indexes(visibleRows(inputs, rows, initial, 'all', 'price-asc')), [1, 3, 0, 2, 4]);
+  assert.deepEqual(indexes(visibleRows(inputs, rows, initial, 'all', 'price-desc')), [0, 3, 1, 2, 4]);
+  const changed = chooseCandidate(rows, initial, 0, 1);
+  assert.deepEqual(indexes(visibleRows(inputs, rows, changed, 'all', 'price-asc')), [1, 3, 0, 2, 4]);
+  assert.deepEqual(indexes(visibleRows(inputs, rows, changed, 'white', 'price-asc')), [1, 0]);
 });
