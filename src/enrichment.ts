@@ -216,7 +216,15 @@ function rank(input: WineEnrichmentInput, candidates: Wine[]): Wine[] {
     // A known distinct bottling (e.g. Veuve Yellow Label / Moët Impérial)
     // must not turn into rosé just because producer + champagne match.
     if (input.type === 'sparkling' && /\bchampagne\b/i.test(input.name) &&
-      !/\bros[ée]\b/i.test(input.name) && /\bros[ée]\b/i.test(wine.name)) return false;
+      !tokens(input.name).includes('rose') && tokens(wine.name).includes('rose')) return false;
+    // A verified scoped alias is defining identity, not merely a search hint.
+    if (/^veuve\s+clicquot\b/i.test(input.name) && /\byellow\s+label\b/i.test(input.name) &&
+      !(candidateName.includes('carte') && candidateName.includes('jaune'))) return false;
+    // Once the leading winery has been identified, another producer sharing
+    // the grape or a marketing token is not a useful alternative.
+    if (top && top.id !== wine.id && overlap(query.slice(0, 2), topWinery) > 0 &&
+      overlap(topWinery, significant(wine.winery?.name ?? '')) === 0 &&
+      overlap(query.slice(0, 2), significant(wine.winery?.name ?? '')) === 0) return false;
     // Strong full-name evidence should outrank, and exclude, a wrong producer
     // that shares the region/grape but misses the distinctive wine-name phrase.
     if (veryStrongName && wine.id !== top!.id &&
