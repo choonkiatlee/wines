@@ -4,7 +4,7 @@ import { enrichWines } from '../src/enrichment.ts';
 import { VivinoAlgoliaClient } from '../packages/vivino-client/src/algolia-client.ts';
 import { checkCase, regressionCases } from '../test/lib/wine-matching-cases.mjs';
 
-const cases=(await regressionCases()).filter(c=>c.verified);
+const cases=(await regressionCases()).filter(c=>c.verified && c.live!==false);
 const provider=new VivinoAlgoliaClient();
 const upstreamCalls={search:0,profile:0,vintageProfile:0};
 const client={
