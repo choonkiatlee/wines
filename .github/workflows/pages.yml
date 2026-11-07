@@ -40,6 +40,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Typecheck
         run: npm run typecheck
+      - name: Standalone Vivino client typecheck
+        run: npm run typecheck -w @choonkiatlee/vivino-client
       - name: Unit tests
         run: npm test
       - name: Build static browser app
