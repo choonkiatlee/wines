@@ -304,7 +304,13 @@
         "type": "white"
       },
       "expected": {
-        "topId": 9530
+        "topId": 9530,
+        "mustExcludeIds": [
+          6138230,
+          6138233,
+          1133970,
+          10137566
+        ]
       },
       "candidates": [
         {
