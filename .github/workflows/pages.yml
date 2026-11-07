@@ -6,6 +6,7 @@ on:
       - 'src/**'
       - 'packages/vivino-client/**'
       - 'apps/pages/**'
+      - 'scripts/check-pages-cors.mjs'
       - 'package.json'
       - 'tsconfig.json'
       - '.github/workflows/pages.yml'
@@ -43,6 +44,9 @@ jobs:
         run: npm test
       - name: Build static browser app
         run: npm run pages:build
+      - name: Probe browser CORS preflight (diagnostic only)
+        continue-on-error: true
+        run: node scripts/check-pages-cors.mjs
       - name: Configure Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
