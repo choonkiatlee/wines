@@ -190,14 +190,6 @@ function relevance(input: WineEnrichmentInput, wine: Wine): number | null {
     (vintageAvailable ? 3 : 0) + typeBonus + producerAnchor - 3 * extraNameTokens -
     Math.max(0, name.length + winery.length - query.length) * 0.3;
 }
-function hasStrongLabelAnchor(input: WineEnrichmentInput, candidates: Wine[]): boolean {
-  const query = significant(matchingName(input.name));
-  if (query.length < 4) return true;
-  const first = query.slice(0, 2);
-  const last = query.at(-1)!;
-  return candidates.some(wine => overlap(first, significant(wine.winery?.name ?? '')) > 0 &&
-    overlap([last], significant(wine.name)) > 0);
-}
 /** Rank candidates by wine identity, not the Algolia hit order or review popularity. */
 function scored(input: WineEnrichmentInput, candidates: Wine[]): Array<{ wine: Wine; index: number; score: number }> {
   return candidates.map((wine, index) => ({ wine, index, score: relevance(input, wine) }))
