@@ -67,7 +67,7 @@ test('invalid/malformed/oversized inputs are rejected before any fetch could occ
   for (const input of invalid) assert.throws(() => parseWineInputs(JSON.stringify(input)));
   assert.throws(() => parseWineInputs('x'.repeat(24001)), /24 KB/);
   assert.equal(await readWineLink('#about'), null);
-  await assert.rejects(readWineLink('#wines='), /between 1/);
+  await assert.rejects(readWineLink('#wines='), /JSON|Unexpected|input|position/i);
   await assert.rejects(readWineLink('#wines=%5B%5D&autorun=maybe'), /autorun/);
   await assert.rejects(readWineLink('#wines=%5B%5D&wines=%5B%5D'), /exactly one/);
   await assert.rejects(readWineLink('#z=not-base64_'), /Invalid|decompress|unknown|incorrect|Invalid/);

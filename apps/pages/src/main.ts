@@ -190,7 +190,7 @@ function renderTable(): void {
   });
 }
 
-function addMetadata(parent: HTMLElement, label: string, value: string | number | null | undefined): void {
+function addMetadata(parent: HTMLElement, label: string, value: string | number | boolean | null | undefined): void {
   if (value === null || value === undefined || value === '') return;
   const item = element('div', 'meta-item');
   item.append(element('dt', '', label), element('dd', '', String(value)));
