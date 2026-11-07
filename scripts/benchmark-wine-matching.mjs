@@ -9,7 +9,7 @@ const results=cases.map((c,i)=>{
  const row=rows[i],ids=row.matches.map(m=>m.wine.id);
  return {id:c.id,input:c.input,ids,expected:c.expected,problems:checkCase(c,ids),
   error:row.error??null,
-  names:row.matches.map(m=>[m.wine.winery,m.wine.name].filter(Boolean).join(' ')};
+  names:row.matches.map(m=>[m.wine.winery,m.wine.name].filter(Boolean).join(' '))};
 });
 const failures=results.filter(r=>r.error || r.problems.length);
 const withTop=results.filter(r=>r.expected.topId!==undefined);
