@@ -111,7 +111,7 @@ The **append-only curated golden corpus** is `test/fixtures/wine-matching-regres
 To record a new failure:
 1. Identify the correct **Vivino wine ID** from independent producer/cuvée evidence; don't assume a top Algolia hit is correct. Record original input, `expected.topId` and/or `mustIncludeIds`, `mustExcludeIds`, or `empty`, plus `reason` and `source`.
 2. Add a minimal frozen `candidates` list (IDs, names, wineries, `type_id` and optional region/vintages) and optionally `searchResults` for a specific retrieval problem.
-3. Mark `verified:true` only after identity verification. Use `verified:false` for a pending example, which will be kept in the fixture but excluded from hard assertions and live scoring.
+3. Mark `verified:true` only after identity verification. Use `verified:false` for a pending example, which will be kept in the fixture but excluded from hard assertions and live scoring. For a **verified offline-only scenario** (such as a deliberately omitted correct search hit), use `live:false`: it still runs in offline CI but is excluded from the live benchmark.
 4. Run `npm test`; reproduce the failure before changing the matcher and retain the case afterwards. Never rewrite expected IDs from a changing live response.
 
 **Opt-in live check** (real Vivino Algolia; does not rewrite fixtures):
