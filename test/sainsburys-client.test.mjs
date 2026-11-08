@@ -21,7 +21,7 @@ test('requests the given category page and returns the native products and sourc
   });
 
   const page = await client.listCategoryPage(category, { page: 2 });
-  assert.deepEqual(page.pagination, { page: 2, total: 3, returned: 1 });
+  assert.deepEqual(page.pagination, { page: 2, total: 3, returned: 1, totalPages: 2 });
   assert.equal(page.products[0].product_uid, '8121557');
   assert.equal(page.products[0].retail_price.measure, '');
   assert.ok(page.products[0].source);
@@ -70,4 +70,10 @@ test('surfaces HTTP errors and rejects HTML returned as a successful response', 
     headers: { 'content-type': 'text/html' },
   }) });
   await assert.rejects(html.listCategoryPage(category), /text\/x-component/);
+});
+
+test('rejects source pagination for a different category', async () => {
+  const wrongCategory = pageTwo.replace('wine/c:1019462', 'fruit/c:123');
+  const client = new SainsburysClient({ fetch: async () => rsc(wrongCategory) });
+  await assert.rejects(client.listCategoryPage(category, { page: 2 }), /category pagination/i);
 });

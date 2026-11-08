@@ -3,24 +3,13 @@ type NativeRecord = Record<string, unknown>;
 export interface SainsburysProduct extends NativeRecord {
   product_uid: string;
   name: string;
-  full_url?: string | null;
-  retail_price?: { price: number; measure?: string } | null;
-  is_available?: boolean | null;
-  description?: string[] | null;
-  categories?: Array<{ id: string; name: string }> | null;
-  promotions?: Array<NativeRecord & {
-    promotion_uid?: string;
-    promo_type?: string;
-    strap_line?: string;
-    original_price?: number;
-    is_nectar?: boolean;
-  }> | null;
 }
 
 export interface SainsburysPagination {
   page: number;
   total: number;
   returned: number;
+  totalPages: number;
 }
 
 export interface SainsburysCategoryPage {
@@ -50,14 +39,16 @@ function isCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
-function decodePage(body: string, requestedPage: number): Omit<SainsburysCategoryPage, 'retrievedAt'> {
+function decodePage(body: string, category: string, requestedPage: number): Omit<SainsburysCategoryPage, 'retrievedAt'> {
   let products: SainsburysProduct[] | undefined;
   let productPage: unknown;
   let pageData: NativeRecord | undefined;
+  let pageControls: NativeRecord | undefined;
 
-  // The Flight stream carries the listing and its source counts in separate JSON rows.
+  // The Flight stream carries the listing, product counts and page controls in separate JSON rows.
   for (const row of body.split('\n')) {
-    if (!row.includes('"productImpressions"') && !row.includes('"data_productList_numberOfProducts"')) continue;
+    if (!row.includes('"productImpressions"') && !row.includes('"data_productList_numberOfProducts"') &&
+      !row.includes('"categoryBasePath"')) continue;
     const match = /^[0-9a-f]+:(\["\$".*)$/i.exec(row);
     if (!match) continue;
     let element: unknown;
@@ -80,6 +71,10 @@ function decodePage(body: string, requestedPage: number): Omit<SainsburysCategor
       if (pageData) throw new Error('Sainsbury’s returned ambiguous category pagination');
       pageData = props.data;
     }
+    if ('categoryBasePath' in props && ('current' in props || 'total' in props)) {
+      if (pageControls) throw new Error('Sainsbury’s returned ambiguous category page controls');
+      pageControls = props;
+    }
   }
 
   const page = pageData?.data_page_number;
@@ -98,7 +93,19 @@ function decodePage(body: string, requestedPage: number): Omit<SainsburysCategor
     throw new Error(`Sainsbury’s returned an inconsistent category product count on page ${page}`);
   }
 
-  return { products: products ?? [], pagination: { page, total, returned } };
+  // A complete first page can omit the pagination component.
+  let totalPages = 1;
+  if (pageControls) {
+    if (pageControls.categoryBasePath !== category || pageControls.current !== page ||
+      !isCount(pageControls.total) || pageControls.total < page) {
+      throw new Error('Sainsbury’s returned mismatched category pagination controls');
+    }
+    totalPages = pageControls.total;
+  } else if (page !== 1 || returned !== total) {
+    throw new Error('Sainsbury’s returned incomplete category pagination controls');
+  }
+
+  return { products: products ?? [], pagination: { page, total, returned, totalPages } };
 }
 
 export class SainsburysClient {
@@ -121,6 +128,6 @@ export class SainsburysClient {
     if (contentType !== 'text/x-component') {
       throw new Error(`Sainsbury’s category response was not text/x-component: ${url}`);
     }
-    return { ...decodePage(await response.text(), page), retrievedAt: new Date().toISOString() };
+    return { ...decodePage(await response.text(), path, page), retrievedAt: new Date().toISOString() };
   }
 }

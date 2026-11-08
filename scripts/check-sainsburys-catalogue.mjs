@@ -10,19 +10,21 @@ async function readPage(page) {
 }
 
 const first = await readPage(1);
-const { total, returned: pageSize } = first.pagination;
-const pages = total === 0 ? 1 : Math.ceil(total / pageSize);
+const { total, totalPages } = first.pagination;
 
-for (let page = 1; page <= pages; page++) {
+for (let page = 1; page <= totalPages; page++) {
   const { products, pagination } = page === 1 ? first : await readPage(page);
   if (pagination.total !== total) {
     throw new Error(`Catalogue total changed from ${total} to ${pagination.total} on page ${page}`);
+  }
+  if (pagination.totalPages !== totalPages) {
+    throw new Error(`Catalogue page count changed from ${totalPages} to ${pagination.totalPages} on page ${page}`);
   }
   for (const { product_uid } of products) {
     if (seen.has(product_uid)) throw new Error(`Duplicate SKU ${product_uid} on page ${page}`);
     seen.add(product_uid);
   }
-  console.log(`Page ${page}/${pages}: ${products.length} records, ${seen.size}/${total} unique SKUs`);
+  console.log(`Page ${page}/${totalPages}: ${products.length} records, ${seen.size}/${total} unique SKUs`);
 }
 
 if (seen.size !== total) throw new Error(`Incomplete catalogue: ${seen.size}/${total} unique SKUs`);

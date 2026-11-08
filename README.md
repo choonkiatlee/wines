@@ -118,6 +118,9 @@ Evidence: [first Actions check](https://github.com/choonkiatlee/wines/actions/ru
 `@choonkiatlee/sainsburys-client` reads the public online grocery catalogue.
 Pass a grocery category path and a one-based page number. The response includes
 native products, source pagination counts, and a UTC retrieval timestamp.
+Pagination includes the current page, total pages, total products and records
+returned. Product fields beyond `product_uid` and `name` retain their native
+values and can be narrowed by the caller.
 
 ```ts
 import { SainsburysClient } from '@choonkiatlee/sainsburys-client';
