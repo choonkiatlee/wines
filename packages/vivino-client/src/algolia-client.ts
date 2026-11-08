@@ -1,6 +1,9 @@
 /** Primary wine data client. Every read goes to Vivino's own Algolia index. */
 import { object, requestJson } from './http.ts';
-import type { Wine, WineStats, IndexedVintage, AlgoliaRating, AlgoliaWineProfile, ResolvedVivinoVintage } from './types.ts';
+import type {
+  Wine, WineStats, IndexedVintage, AlgoliaRating, AlgoliaWineProfile,
+  ResolvedVivinoVintage, WinerySummary, WineryWinesPage,
+} from './types.ts';
 // Vivino's frontend Algolia application and search-only key (not MCP credentials).
 // Publicly embedded in Vivino's frontend; NOT evidence of permission to scrape.
 const ALGOLIA_INDEX_URL = 'https://9takgwjuxl-dsn.algolia.net/1/indexes/WINES_prod';
@@ -46,6 +49,22 @@ function numeric(value: unknown): number | null {
 function ids(value: unknown): number[] | null {
   return Array.isArray(value) && value.every(v => Number.isSafeInteger(v) && v > 0) ? value : null;
 }
+/** Extract producer statistics without another request; unlike wine ratings, winery
+ * stats do not expose a 'status' flag in the indexed record. */
+function winerySummary(w: Wine): WinerySummary | null {
+  const winery = w.winery;
+  if (!winery) return null;
+  const id = typeof winery.id === 'number' && Number.isSafeInteger(winery.id) && winery.id > 0 ? winery.id : null;
+  const name = text(winery.name);
+  const average = winery.statistics?.ratings_average;
+  const ratingAverage = typeof average === 'number' && Number.isFinite(average) &&
+    average >= 1 && average <= 5 ? average : null;
+  const ratingCount = count(winery.statistics?.ratings_count);
+  const winesCount = count(winery.statistics?.wines_count);
+  return id !== null || name !== null || ratingAverage !== null || ratingCount !== null || winesCount !== null
+    ? { id, name, ratingAverage, ratingCount, winesCount } : null;
+}
+
 function profile(w: Wine, v?: IndexedVintage): AlgoliaWineProfile {
   const warnings: string[] = [];
   const vintageRating = v && v.has_valid_ratings !== false && v.statistics?.is_wine_rating !== true
@@ -56,6 +75,7 @@ function profile(w: Wine, v?: IndexedVintage): AlgoliaWineProfile {
   const description = text(w.description);
   const image = text(w.image?.location);
   return {
+    winery: winerySummary(w),
     wine: { id: w.id, name: w.name, winery: text(w.winery?.name), region: text(w.region?.name),
       country: text(typeof w.region?.country === 'string' ? w.region.country : w.region?.country?.code),
       alcohol: numeric(w.alcohol), closure: text(w.closure), nonVintage: typeof w.non_vintage === 'boolean' ? w.non_vintage : null,
@@ -98,6 +118,31 @@ export class VivinoAlgoliaClient {
     const w = wineFrom(await requestJson(this.request, ALGOLIA_INDEX_URL + '/' + wineId, { headers: this.headers() }));
     if (w.id !== wineId) throw new Error('Indexed wine does not match requested wineId');
     return w;
+  }
+
+  /** Official producer rating, rating count and catalog size from the existing wine record.
+   * The full getProfile() response also includes this object without any extra request.
+   */
+  async getWineryStats(wineId: number): Promise<WinerySummary | null> {
+    return winerySummary(await this.getWine(wineId));
+  }
+
+  /** Opt-in paginated catalog lookup; intentionally NOT called by getProfile/enrichWines/Pages. */
+  async listWineryWines(wineryId: number, page = 0, limit = 100): Promise<WineryWinesPage> {
+    identifier(wineryId, 'wineryId');
+    if (!Number.isSafeInteger(page) || page < 0) throw new RangeError('page must be a nonnegative integer');
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new RangeError('limit must be 1..100');
+    const data = await requestJson(this.request, ALGOLIA_INDEX_URL + '/query', {
+      method: 'POST', headers: this.headers(),
+      body: JSON.stringify({ query: '', numericFilters: ['winery.id=' + wineryId], hitsPerPage: limit, page }),
+    });
+    if (!Array.isArray(data.hits)) throw new Error('Unexpected Vivino winery search response');
+    const wines = data.hits.map(wineFrom);
+    if (wines.some(w => w.winery?.id !== wineryId)) throw new Error('Indexed wine does not match requested wineryId');
+    return {
+      wineryId, page, total: count(data.nbHits) ?? wines.length,
+      pages: count(data.nbPages), wines,
+    };
   }
 
   async resolveVintage(wineId: number, year: number): Promise<ResolvedVivinoVintage> {

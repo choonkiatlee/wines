@@ -47,6 +47,17 @@ export function ratingFor(profile: AlgoliaWineProfile): WineRatingView | null {
   return overall ? { ...overall, scope: 'overall' } : null;
 }
 
+/** Compact display of already indexed producer data; no provider calls. */
+export function producerRatingLine(profile: AlgoliaWineProfile): string | null {
+  const producer = profile.winery;
+  if (!producer) return null;
+  const parts: string[] = [];
+  if (producer.ratingAverage != null) parts.push('★ ' + producer.ratingAverage.toFixed(1) + ' / 5');
+  if (producer.ratingCount != null) parts.push(producer.ratingCount.toLocaleString() + ' ratings');
+  if (producer.winesCount != null) parts.push(producer.winesCount.toLocaleString() + ' wines');
+  return parts.length ? parts.join(' · ') : null;
+}
+
 export function displayWineName(profile: AlgoliaWineProfile): string {
   const name = profile.wine.name.trim();
   const winery = profile.wine.winery?.trim();

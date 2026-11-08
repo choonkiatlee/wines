@@ -1,7 +1,7 @@
 import { enrichWines, VivinoAlgoliaClient } from '../../../src/index.ts';
 import type { AlgoliaWineProfile, WineEnrichmentInput } from '../../../src/index.ts';
 import {
-  chooseCandidate, displayWineName, initialSelections, ratingFor,
+  chooseCandidate, displayWineName, initialSelections, producerRatingLine, ratingFor,
   selectedProfile, selectionSummary,
 } from './selection.ts';
 import type { FullWineRow, Selection } from './selection.ts';
@@ -186,6 +186,8 @@ function renderTable(): void {
     matchCell.append(button);
     const ratingCell = appendCell(tr, 'rating-cell');
     compactRating(ratingCell, profile);
+    const producerInTable = profile ? producerRatingLine(profile) : null;
+    if (producerInTable) ratingCell.append(element('span', 'producer-caption', 'Producer · ' + producerInTable));
     const noteCell = appendCell(tr, 'notes-cell');
     const tasting = profile?.derived.tastingNotes;
     const excerpt = shortWineNote(tasting ?? profile?.description?.text);
@@ -254,6 +256,15 @@ function renderDetail(): void {
         rating.reviewsCount === null ? null : rating.reviewsCount.toLocaleString() + ' written reviews',
       ].filter(Boolean).join('  ·  ');
       if (counts) heroCopy.append(element('p', 'rating-counts', counts));
+    }
+    const producerInDetail = producerRatingLine(profile);
+    if (producerInDetail) {
+      const producerSummary = element('p', 'producer-rating-summary');
+      producerSummary.append(
+        element('span', 'producer-rating-title', 'Producer rating'),
+        element('span', '', producerInDetail),
+      );
+      heroCopy.append(producerSummary);
     }
     hero.append(heroCopy);
     dialogContent.append(hero);

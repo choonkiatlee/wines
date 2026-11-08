@@ -9,6 +9,31 @@ export type WineStats = {
   wine_ratings_count?: number;
 };
 
+/** Producer information already embedded in Vivino's indexed wine records. */
+export type Winery = {
+  id?: number;
+  name?: string;
+  statistics?: { ratings_average?: number; ratings_count?: number; wines_count?: number };
+};
+
+/** Official winery-level statistics, not an average estimated from sampled wines. */
+export type WinerySummary = {
+  id: number | null;
+  name: string | null;
+  ratingAverage: number | null;
+  ratingCount: number | null;
+  winesCount: number | null;
+};
+
+/** Results for one numeric winery-id filter. Pagination is zero based. */
+export type WineryWinesPage = {
+  wineryId: number;
+  page: number;
+  total: number;
+  pages: number | null;
+  wines: Wine[];
+};
+
 export type IndexedVintage = {
   id: number;
   year: number | string;
@@ -20,7 +45,7 @@ export type IndexedVintage = {
 export type Wine = {
   id: number;
   name: string;
-  winery?: { name?: string };
+  winery?: Winery;
   region?: { name?: string; country?: string | { code?: string } };
   statistics?: WineStats;
   vintages?: IndexedVintage[] | null;
@@ -148,6 +173,8 @@ export type ResolvedVivinoVintage = {
 /** Ratings observed in the index; missing counts are not assumed to be zero. */
 export type AlgoliaRating = { average: number; count: number | null; reviewsCount: number | null };
 export type AlgoliaWineProfile = {
+  /** The producer's official statistics, from the same wine-record response. */
+  winery: WinerySummary | null;
   wine: {
     id: number; name: string; winery: string | null; region: string | null; country: string | null;
     alcohol: number | null; closure: string | null; nonVintage: boolean | null;
