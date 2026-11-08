@@ -8,6 +8,12 @@ These instructions describe the repository architecture and an **optional, user-
 - Preserve `enrichWines([{ name, year?, type? }])` and the current compact output: up to three **candidate** matches containing canonical name, confirmed year/null, correctly scoped rating/null, description/null, URL/null. `returnAll: true` exposes normalized profiles. **Candidates are not verified identities**; the caller makes the final choice.
 - Prefer generic retrieval, normalization, producer/cuvée ranking, negative evidence, and abstention over one-off retailer rules. Do not introduce scraping, a catalogue-ingestion system, infrastructure, an LLM call, API fields, or provider dependencies unless explicitly requested. Keep test experiments small and throwaway.
 
+## Sainsbury’s live checks on GitHub Actions
+
+**A live Sainsbury’s catalogue request from a GitHub-hosted runner can return an expected upstream `403 Forbidden`.** The known response is an Akamai EdgeSuite HTML page titled `Access Denied`. Node fetch and curl both reproduced it. A follow-up probe also reproduced it across HTTP and TLS versions and with or without `RSC: 1`. The same Node release returned the catalogue through the development workspace’s proxy. The specific Akamai rule is unknown. [Hosted-runner diagnostic](https://github.com/choonkiatlee/wines/actions/runs/42514406825)
+
+For this signature, report the live check as **blocked by upstream access**. Use `npm test` for normal CI and run `node --experimental-strip-types scripts/check-sainsburys-catalogue.mjs` from an environment with working access when live verification is needed. Investigate other response signatures and offline failures separately. Keep hosted live Sainsbury’s checks diagnostic and separate from required CI.
+
 ## Failure-driven API improvement workflow — EXPLICIT OPT-IN ONLY
 
 **Trigger:** Use the following regression and live-validation workflow **only when the user explicitly instructs you to improve the wine-matching/enrichment API based on observed failed or incorrect matches** (for example, "improve the API using these failures", or "fix these wine-matching failures and add regression tests").
