@@ -15,6 +15,7 @@
   "include": [
     "src/**/*.ts",
     "packages/vivino-client/src/**/*.ts",
+    "packages/sainsburys-client/src/**/*.ts",
     "apps/pages/src/**/*.ts",
     "test/**/*.ts"
   ]

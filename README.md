@@ -113,6 +113,33 @@ Website data worked from the development environment but native Node requests re
 
 Evidence: [first Actions check](https://github.com/choonkiatlee/wines/actions/runs/41795762655), [HTTP diagnostic](https://github.com/choonkiatlee/wines/actions/runs/41814189580), [TLS matrix](https://github.com/choonkiatlee/wines/actions/runs/41814793769). These were one-off experiment branches, not recurring CI.
 
+## Standalone Sainsbury’s grocery client
+
+`@choonkiatlee/sainsburys-client` reads the public online grocery catalogue.
+Pass a grocery category path and a one-based page number. The response includes
+native products, source pagination counts, and a UTC retrieval timestamp.
+Pagination includes the current page, total pages, total products and records
+returned. Product fields beyond `product_uid` and `name` retain their native
+values and can be narrowed by the caller.
+
+```ts
+import { SainsburysClient } from '@choonkiatlee/sainsburys-client';
+
+const sainsburys = new SainsburysClient();
+const category = '/groceries/browse/beer-wine-and-spirits/wine/c:1019462';
+const { products, pagination } = await sainsburys.listCategoryPage(category, { page: 1 });
+console.log(products[0]?.product_uid, pagination);
+```
+
+The client uses the no-store online context. Prices, promotions and product
+URLs are returned as supplied by Sainsbury’s. The wine-list mapping is tracked
+separately in [issue #29](https://github.com/choonkiatlee/wines/issues/29).
+
+To check a live category, run
+`node --experimental-strip-types scripts/check-sainsburys-catalogue.mjs`.
+The script defaults to Wine and accepts another grocery category path as its
+first argument. It checks raw SKU uniqueness against the reported total.
+
 ## Validation
 
 ```sh
