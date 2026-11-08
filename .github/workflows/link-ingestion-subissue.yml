@@ -1,0 +1,18 @@
+name: Attach retailer normaliser sub-issue
+on:
+  push:
+    branches: [probe-sainsburys-client-28]
+    paths: [.github/workflows/link-ingestion-subissue.yml]
+permissions:
+  issues: write
+jobs:
+  link:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Link issue 29 under issue 28
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST repos/choonkiatlee/wines/issues/28/sub_issues \
+            -F sub_issue_id=6274405196 --jq .number
