@@ -9,9 +9,40 @@ jobs:
   catalogue:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      CATEGORY_URL: https://www.sainsburys.co.uk/groceries/browse/beer-wine-and-spirits/wine/c:1019462
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --experimental-strip-types scripts/check-sainsburys-catalogue.mjs
+      - name: Compare HTTP responses from Node fetch and curl
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const keys = /^(content-type|server|via|location|x-vercel-(id|error|mitigated|cache|challenge-token)|x-cache|cf-ray|cf-mitigated|x-amz-cf-(id|pop)|x-akamai-request-id|retry-after)$/i;
+          const response = await fetch(process.env.CATEGORY_URL, { headers: { RSC: '1' }, credentials: 'omit', redirect: 'manual', signal: AbortSignal.timeout(15000) });
+          console.log('Node', process.version, response.status, response.statusText);
+          for (const [key, value] of response.headers) {
+            if (keys.test(key) && key !== 'x-vercel-challenge-token') console.log(key + ': ' + value);
+          }
+          const body = await response.text();
+          if (!response.ok) console.log('Body excerpt:', body.slice(0, 1000).replace(/[\r\n]+/g, ' '));
+          else console.log('Body length:', body.length);
+          NODE
+          curl --silent --show-error --max-time 15 --header 'RSC: 1' --dump-header "$RUNNER_TEMP/sains-headers" --output "$RUNNER_TEMP/sains-body" --write-out 'curl HTTP %{http_code}, HTTP version %{http_version}\n' "$CATEGORY_URL"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          path = Path(os.environ['RUNNER_TEMP'])
+          headers = (path / 'sains-headers').read_text().splitlines()
+          for line in headers:
+              key = line.partition(':')[0].lower()
+              if line.startswith('HTTP/') or key in {'content-type', 'server', 'via', 'location', 'x-vercel-id', 'x-vercel-error', 'x-vercel-mitigated', 'x-vercel-cache', 'x-cache', 'cf-ray', 'cf-mitigated', 'x-amz-cf-id', 'x-amz-cf-pop', 'x-akamai-request-id', 'retry-after'}:
+                  print(line)
+          status = next((line.split()[1] for line in reversed(headers) if line.startswith('HTTP/')), '')
+          body = (path / 'sains-body').read_bytes()
+          if not status.startswith('2'):
+              print('Body excerpt:', ' '.join(body[:1000].decode(errors='replace').splitlines()))
+          else:
+              print('Body length:', len(body))
+          PY
