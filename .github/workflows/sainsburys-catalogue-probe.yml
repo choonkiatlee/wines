@@ -8,41 +8,51 @@ permissions:
 jobs:
   catalogue:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    env:
-      CATEGORY_URL: https://www.sainsburys.co.uk/groceries/browse/beer-wine-and-spirits/wine/c:1019462
+    timeout-minutes: 4
     steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Compare HTTP responses from Node fetch and curl
+      - name: Compare public category transport and response
         shell: bash
         run: |
-          node --input-type=module <<'NODE'
-          const keys = /^(content-type|server|via|location|x-vercel-(id|error|mitigated|cache|challenge-token)|x-cache|cf-ray|cf-mitigated|x-amz-cf-(id|pop)|x-akamai-request-id|retry-after)$/i;
-          const response = await fetch(process.env.CATEGORY_URL, { headers: { RSC: '1' }, credentials: 'omit', redirect: 'manual', signal: AbortSignal.timeout(15000) });
-          console.log('Node', process.version, response.status, response.statusText);
-          for (const [key, value] of response.headers) {
-            if (keys.test(key) && key !== 'x-vercel-challenge-token') console.log(key + ': ' + value);
-          }
-          const body = await response.text();
-          if (!response.ok) console.log('Body excerpt:', body.slice(0, 1000).replace(/[\r\n]+/g, ' '));
-          else console.log('Body length:', body.length);
-          NODE
-          curl --silent --show-error --max-time 15 --header 'RSC: 1' --dump-header "$RUNNER_TEMP/sains-headers" --output "$RUNNER_TEMP/sains-body" --write-out 'curl HTTP %{http_code}, HTTP version %{http_version}\n' "$CATEGORY_URL"
-          python - <<'PY'
-          import os
+          set -eu
+          category='https://www.sainsburys.co.uk/groceries/browse/beer-wine-and-spirits/wine/c:1019462'
+          work="$(mktemp -d)"
+          trap 'rm -rf "$work"' EXIT
+          curl -V | head -1
+          printf 'Proxy variables present:'
+          for key in HTTPS_PROXY https_proxy ALL_PROXY all_proxy; do
+            if [[ -n "${!key:-}" ]]; then printf ' %s' "$key"; fi
+          done
+          printf '\nDNS for target (system resolver):\n'
+          getent ahostsv4 www.sainsburys.co.uk | awk '!seen[$1]++ {print $1}' || true
+          
+          probe() {
+            local label="$1"
+            shift
+            printf '\n== %s ==\n' "$label"
+            curl -q -sv --max-time 12 --user-agent node --dump-header "$work/headers" --output "$work/body" \
+              --write-out 'status=%{http_code} http=%{http_version} type=%{content_type} bytes=%{size_download}\n' \
+              "$@" "$category" 2>"$work/trace" || true
+            awk '/SSL connection using|ALPN: server accepted|issuer:|subject:/{print}' "$work/trace"
+            if [[ -f "$work/headers" ]]; then
+              awk 'tolower($0) ~ /^(http\/|server:|via:|x-vercel-id:|x-vercel-error:|x-cache:|x-matched-path:|akamai-grn:|x-akamai-request-id:|location:)/ {print}' "$work/headers"
+            fi
+            if [[ -f "$work/body" ]]; then
+              python - "$work/body" <<'PY'
           from pathlib import Path
-          path = Path(os.environ['RUNNER_TEMP'])
-          headers = (path / 'sains-headers').read_text().splitlines()
-          for line in headers:
-              key = line.partition(':')[0].lower()
-              if line.startswith('HTTP/') or key in {'content-type', 'server', 'via', 'location', 'x-vercel-id', 'x-vercel-error', 'x-vercel-mitigated', 'x-vercel-cache', 'x-cache', 'cf-ray', 'cf-mitigated', 'x-amz-cf-id', 'x-amz-cf-pop', 'x-akamai-request-id', 'retry-after'}:
-                  print(line)
-          status = next((line.split()[1] for line in reversed(headers) if line.startswith('HTTP/')), '')
-          body = (path / 'sains-body').read_bytes()
-          if not status.startswith('2'):
-              print('Body excerpt:', ' '.join(body[:1000].decode(errors='replace').splitlines()))
-          else:
-              print('Body length:', len(body))
+          from html import unescape
+          import re
+          import sys
+          sample = unescape(Path(sys.argv[1]).read_bytes()[:1500].decode(errors='replace'))
+          if 'Access Denied' in sample:
+              print('edge=Access Denied', 'reference=' + str(re.search(r'Reference\s*#([\w.]+)', sample).group(1)) if re.search(r'Reference\s*#([\w.]+)', sample) else '')
+              print('error_host=errors.edgesuite.net' if 'errors.edgesuite.net' in sample else 'error_host=unknown')
           PY
+            fi
+            rm -f "$work/headers" "$work/body" "$work/trace"
+          }
+          
+          probe 'RSC, HTTP/1.1' --http1.1 -H 'RSC: 1'
+          probe 'RSC, HTTP/2' --http2 -H 'RSC: 1'
+          probe 'Plain page, HTTP/1.1' --http1.1
+          probe 'RSC, HTTP/1.1, alternate User-Agent' --http1.1 -H 'RSC: 1' --user-agent 'catalogue-diagnostic/1.0'
+          probe 'RSC, HTTP/1.1, TLS 1.2 only' --http1.1 -H 'RSC: 1' --tlsv1.2 --tls-max 1.2
