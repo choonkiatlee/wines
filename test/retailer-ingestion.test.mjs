@@ -154,3 +154,23 @@ test('adapter delegates page and signal to standalone raw client, with no Vivino
   assert.equal(page.pagination.sourceTotal,999);
   assert.equal(page.pagination.included,1);
 });
+
+
+test('real RSC page fixture: raw client decodes native listing before mapping', async () => {
+  const { SainsburysClient } = await import('../packages/sainsburys-client/src/index.ts');
+  const fixture = readFileSync(new URL('./fixtures/sainsburys-category-page-2.rsc', import.meta.url), 'utf8');
+  const client = new SainsburysClient({
+    fetch: async (url, init) => {
+      assert.equal(String(url), 'https://www.sainsburys.co.uk' + SAINSBURYS_WINE_CATEGORY + '/opt/page:2');
+      assert.equal(new Headers(init.headers).get('RSC'), '1');
+      return new Response(fixture, { headers: { 'content-type': 'text/x-component' } });
+    },
+  });
+  const page = await new SainsburysWineAdapter(client).fetchPage({page:2});
+  assert.deepEqual(page.pagination, {page:2,totalPages:2,sourceTotal:3,sourceReturned:1,included:1});
+  assert.equal(page.wines[0].productId, '8121557');
+  assert.equal(page.wines[0].wineType, 'sparkling');
+  assert.equal(page.wines[0].bottleSizeMl, 750);
+  assert.equal(page.wines[0].prices.regularMinor, 1175);
+  assert.equal(page.wines[0].conditionalOffers[0].kind, 'multibuy');
+});
