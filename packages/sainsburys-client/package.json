@@ -1,0 +1,13 @@
+{
+  "name": "@choonkiatlee/sainsburys-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone client for Sainsbury’s public grocery catalogue",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=22.16"
+  }
+}
