@@ -132,8 +132,13 @@ console.log(products[0]?.product_uid, pagination);
 ```
 
 The client uses the no-store online context. Prices, promotions and product
-URLs are returned as supplied by Sainsbury’s. The wine-list mapping is tracked
-separately in [issue #29](https://github.com/choonkiatlee/wines/issues/29).
+URLs are returned as supplied by Sainsbury’s. The normalised wine-list adapter lives separately in
+[`@choonkiatlee/retailer-ingestion`](packages/retailer-ingestion/), tracked by
+[issue #29](https://github.com/choonkiatlee/wines/issues/29). It maps one raw
+Wine category page into retailer-scoped wine records, preserves the unfiltered
+source total, and distinguishes regular prices from public and Nectar offers.
+See the [package README](packages/retailer-ingestion/README.md) for the pure
+mapping API and its pricing caveats. It never calls Vivino.
 
 To check a live category, run
 `node --experimental-strip-types scripts/check-sainsburys-catalogue.mjs`.
