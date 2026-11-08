@@ -16,6 +16,7 @@
     "src/**/*.ts",
     "packages/vivino-client/src/**/*.ts",
     "packages/sainsburys-client/src/**/*.ts",
+    "packages/retailer-ingestion/src/**/*.ts",
     "apps/pages/src/**/*.ts",
     "test/**/*.ts"
   ]
