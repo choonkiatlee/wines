@@ -1,0 +1,182 @@
+[
+  {
+    "product_uid": "6573987",
+    "name": "Sainsbury's Conegliano Prosecco, Taste the Difference 75cl",
+    "full_url": "://www.sainsburys.co.uk/gol-ui/product/sainsburys-conegliano-prosecco-taste-the-difference-75cl",
+    "retail_price": {
+      "price": 7.5,
+      "measure": "ea"
+    },
+    "is_available": true,
+    "is_alcoholic": false,
+    "categories": [
+      {
+        "name": "Prosecco"
+      }
+    ],
+    "promotions": [
+      {
+        "promotion_uid": "10775475",
+        "strap_line": "Save 25% with Nectar",
+        "promo_type": "SIMPLE_FIXED_PRICE",
+        "promo_group": "simple",
+        "is_nectar": true,
+        "original_price": 10
+      },
+      {
+        "promotion_uid": "10775137",
+        "strap_line": "Buy any 6 or more save 25% with Nectar",
+        "promo_type": "MULTIBUY_BUY_X_ITEMS_SAVE_Y_PERCENT_ROLLING",
+        "promo_group": "multi_buy",
+        "is_nectar": true,
+        "original_price": 0
+      }
+    ]
+  },
+  {
+    "product_uid": "2284071",
+    "name": "Veuve Clicquot Yellow Label Brut Champagne 75cl",
+    "full_url": "://www.sainsburys.co.uk/gol-ui/product/veuve-clicquot-yellow-label-brut-champagne-75cl",
+    "retail_price": {
+      "price": 50,
+      "measure": "ea"
+    },
+    "is_available": true,
+    "is_alcoholic": false,
+    "categories": [
+      {
+        "name": "Champagne"
+      }
+    ],
+    "promotions": [
+      {
+        "promotion_uid": "10775137",
+        "strap_line": "Buy any 6 or more save 25% with Nectar",
+        "promo_type": "MULTIBUY_BUY_X_ITEMS_SAVE_Y_PERCENT_ROLLING",
+        "promo_group": "multi_buy",
+        "is_nectar": true,
+        "original_price": 0
+      }
+    ]
+  },
+  {
+    "product_uid": "7795070",
+    "name": "Mondelli Pinot Grigio White Wine 75cl",
+    "full_url": "://www.sainsburys.co.uk/gol-ui/product/mondelli-pinot-grigio-white-wine-75cl",
+    "retail_price": {
+      "price": 4.75,
+      "measure": "ea"
+    },
+    "is_available": true,
+    "is_alcoholic": false,
+    "categories": [
+      {
+        "name": "All white wine"
+      }
+    ],
+    "promotions": []
+  },
+  {
+    "product_uid": "7470270",
+    "name": "Sainsbury's House Pinot Grigio White Boxed Wine 225cl",
+    "full_url": "://www.sainsburys.co.uk/gol-ui/product/sainsburys-house-pinot-grigio-white-boxed-wine-225cl",
+    "retail_price": {
+      "price": 15.5,
+      "measure": "ea"
+    },
+    "is_available": true,
+    "is_alcoholic": false,
+    "categories": [
+      {
+        "name": "All white wine"
+      }
+    ],
+    "promotions": []
+  },
+  {
+    "product_uid": "2155876",
+    "name": "Croft Original Sherry, Original 1L",
+    "full_url": "://www.sainsburys.co.uk/gol-ui/product/croft-original-sherry-original-1l",
+    "retail_price": {
+      "price": 12.5,
+      "measure": "ea"
+    },
+    "is_available": true,
+    "is_alcoholic": false,
+    "categories": [
+      {
+        "name": "Sherry, port & fortified wine"
+      }
+    ],
+    "promotions": [
+      {
+        "promotion_uid": "10771835",
+        "strap_line": "Buy 1 for 12.5",
+        "promo_type": "SIMPLE_FIXED_PRICE",
+        "promo_group": "simple",
+        "is_nectar": true,
+        "original_price": 15.75
+      }
+    ]
+  },
+  {
+    "product_uid": "8184559",
+    "name": "Sainsbury's Sauvignon Blanc White Wine, Taste the Difference 75cl",
+    "full_url": "://www.sainsburys.co.uk/gol-ui/product/sainsburys-sauvignon-blanc-white-wine-taste-the-difference-75cl",
+    "retail_price": {
+      "price": 8.5,
+      "measure": "ea"
+    },
+    "is_available": true,
+    "is_alcoholic": false,
+    "categories": [
+      {
+        "name": "All white wine"
+      }
+    ],
+    "promotions": [
+      {
+        "promotion_uid": "10772884",
+        "strap_line": "Meal Deal for £15.00 with Nectar",
+        "promo_type": "MEAL_MULTI_DEAL_FOR_X",
+        "promo_group": "meal_deal",
+        "is_nectar": true,
+        "original_price": 0
+      }
+    ]
+  },
+  {
+    "product_uid": "8060408",
+    "name": "La Vieille Ferme Rose Wine 75cl",
+    "full_url": "://www.sainsburys.co.uk/gol-ui/product/la-vieille-ferme-rose-wine-75cl",
+    "retail_price": {
+      "price": 7.5,
+      "measure": "ea"
+    },
+    "is_available": true,
+    "is_alcoholic": false,
+    "categories": [
+      {
+        "name": "Rose wine"
+      }
+    ],
+    "promotions": [
+      {
+        "promotion_uid": "10775078",
+        "strap_line": "Buy 1 for 7.5",
+        "promo_type": "SIMPLE_FIXED_PRICE",
+        "promo_group": "simple",
+        "is_nectar": true,
+        "original_price": 9
+      },
+      {
+        "promotion_uid": "10775137",
+        "strap_line": "Buy any 6 or more save 25% with Nectar",
+        "promo_type": "MULTIBUY_BUY_X_ITEMS_SAVE_Y_PERCENT_ROLLING",
+        "promo_group": "multi_buy",
+        "is_nectar": true,
+        "original_price": 0
+      }
+    ]
+  }
+]
