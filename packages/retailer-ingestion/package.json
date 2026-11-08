@@ -1,0 +1,16 @@
+{
+  "name": "@choonkiatlee/retailer-ingestion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Retailer-neutral wine list contract with Sainsbury's adapter",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@choonkiatlee/sainsburys-client": "0.1.0"
+  },
+  "engines": {
+    "node": ">=22.16"
+  }
+}
